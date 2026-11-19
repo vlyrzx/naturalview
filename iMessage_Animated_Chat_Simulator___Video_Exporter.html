@@ -1,0 +1,1429 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iMessage Chat Simulator & Video Exporter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['-apple-system', 'BlinkMacSystemFont', 'SF Pro Display', 'SF Pro Text', 'Inter', 'Segoe UI', 'Roboto', 'sans-serif'],
+          },
+          colors: {
+            iosBg: '#000000',
+            iosBar: '#121214',
+            iosCard: '#1c1c1e',
+            iosCardHover: '#2c2c2e',
+            iosBlue: '#0a84ff',
+            iosGrayBubble: '#262629',
+            iosBorder: '#2c2c2e',
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #09090b;
+      color: #f4f4f5;
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(161, 161, 170, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(161, 161, 170, 0.4);
+    }
+
+    /* Realistic iPhone frame */
+    .iphone-bezel {
+      background: linear-gradient(145deg, #27272a 0%, #111113 45%, #18181b 100%);
+      box-shadow:
+        0 0 0 2px #3f3f46,
+        0 0 0 5px #09090b,
+        0 25px 70px -12px rgba(0, 0, 0, 0.9),
+        inset 0 0 12px rgba(255, 255, 255, 0.08);
+    }
+
+    .dynamic-island {
+      background: #000000;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    }
+
+    /* Circular dark-gray FaceTime/video camera button matching image_9a8ad0.jpg / image_ddc13f.jpg */
+    .facetime-circle-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 30% 25%, #2f2f33 0%, #1f1f22 68%, #18181b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.6),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.16s ease, border-color 0.16s ease;
+      cursor: pointer;
+    }
+
+    .facetime-circle-btn:hover {
+      transform: scale(1.06);
+      filter: brightness(1.12);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .facetime-circle-btn:active {
+      transform: scale(0.94);
+    }
+
+    /* Message pop-up & bottom-up animation */
+    @keyframes msgPopUp {
+      0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.94);
+      }
+      70% {
+        opacity: 1;
+        transform: translateY(-2px) scale(1.01);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .animate-msg-in {
+      animation: msgPopUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Send button pop-up spring transition */
+    .send-btn-popup {
+      transition:
+        opacity 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+        transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+        width 0.24s cubic-bezier(0.22, 1, 0.36, 1),
+        margin 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .send-btn-hidden {
+      opacity: 0;
+      transform: scale(0.35) translateY(6px);
+      pointer-events: none;
+    }
+
+    .send-btn-visible {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+
+    .send-btn-pulse {
+      transform: scale(1.18) translateY(-1px) !important;
+      box-shadow: 0 0 18px rgba(10, 132, 255, 0.75) !important;
+    }
+
+    /* Typing dots */
+    @keyframes typingBounce {
+      0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+      30% {
+        transform: translateY(-4px);
+        opacity: 1;
+      }
+    }
+
+    .typing-dot {
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.18s;
+    }
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.36s;
+    }
+
+    /* Optional Dark VHS Aesthetic Overlay */
+    .vhs-overlay {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(255, 255, 255, 0.035) 0px,
+          rgba(255, 255, 255, 0.035) 1px,
+          rgba(0, 0, 0, 0.22) 2px,
+          rgba(0, 0, 0, 0.22) 4px
+        );
+      mix-blend-mode: screen;
+    }
+
+    .vhs-active .vhs-overlay {
+      opacity: 1;
+    }
+
+    .vhs-active .vhs-tint {
+      filter: contrast(1.12) saturate(1.18) hue-rotate(-4deg);
+    }
+
+    @keyframes vhsScanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(500%); }
+    }
+
+    .vhs-tracking-bar {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 26px;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.06) 45%,
+        rgba(120, 220, 255, 0.09) 50%,
+        rgba(255, 255, 255, 0.05) 55%,
+        transparent 100%
+      );
+      animation: vhsScanline 6.5s linear infinite;
+      z-index: 31;
+      pointer-events: none;
+    }
+
+    .vhs-active .vhs-tracking-bar {
+      display: block;
+    }
+
+    /* Recording pulse indicator */
+    @keyframes recPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+    .rec-dot {
+      animation: recPulse 1s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 antialiased selection:bg-sky-500/30 selection:text-sky-200">
+  <!-- App Shell -->
+  <div class="min-h-screen flex flex-col">
+    <!-- Top Studio Header -->
+    <header class="border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md sticky top-0 z-40">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3C6.48 3 2 6.58 2 11c0 2.04.88 3.9 2.33 5.31-.23 1.46-.9 2.86-1.92 3.84a.5.5 0 0 0 .35.85c1.99 0 3.86-.74 5.25-1.8 1.24.36 2.58.56 3.99.56 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-base sm:text-lg font-semibold tracking-tight text-white">iMessage Video Studio</h1>
+            <p class="text-xs text-zinc-400">Animated dark iOS chat simulator &amp; video exporter</p>
+          </div>
+        </div>
+
+        <!-- Primary Studio Actions -->
+        <div class="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+          <button
+            id="previewAnimBtn"
+            type="button"
+            class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/80 transition flex items-center gap-2 cursor-pointer"
+          >
+            <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5.14v13.72a1 1 0 0 0 1.52.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/>
+            </svg>
+            <span id="previewBtnLabel">Play Preview</span>
+          </button>
+
+          <button
+            id="downloadVideoBtn"
+            type="button"
+            class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold bg-sky-500 hover:bg-sky-400 active:scale-[0.98] text-white shadow-lg shadow-sky-500/25 transition flex items-center gap-2 cursor-pointer"
+          >
+            <svg id="downloadIcon" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span id="downloadBtnLabel">Download Video</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Status / Export Progress Banner -->
+      <div id="statusBanner" class="hidden border-t border-zinc-800/80 bg-zinc-900/95">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center justify-between gap-4 text-xs sm:text-sm">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span id="statusDot" class="w-2.5 h-2.5 rounded-full bg-sky-400 rec-dot shrink-0"></span>
+            <span id="statusText" class="text-zinc-200 truncate">Ready</span>
+          </div>
+          <div class="flex items-center gap-3 shrink-0">
+            <div class="w-28 sm:w-44 h-2 rounded-full bg-zinc-800 overflow-hidden">
+              <div id="progressBarFill" class="h-full bg-sky-500 transition-all duration-150 rounded-full" style="width: 0%;"></div>
+            </div>
+            <span id="progressPercent" class="text-xs font-mono text-zinc-400 w-9 text-right">0%</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace: Left Editor + Right Live iPhone Preview -->
+    <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-7 items-start flex-1">
+      <!-- Left Column: Script Editor & Appearance Controls -->
+      <section class="lg:col-span-7 space-y-5">
+        <!-- Contact & Aesthetic Settings Card -->
+        <div class="rounded-2xl bg-zinc-900/85 border border-zinc-800/90 p-4 sm:p-5 shadow-xl space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400">Conversation &amp; Look</h2>
+            <div class="flex items-center gap-2">
+              <button
+                id="presetMidnightBtn"
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/70 transition cursor-pointer"
+              >
+                Late Night Story
+              </button>
+              <button
+                id="presetPlanBtn"
+                type="button"
+                class="px-2.5 py-1 rounded-lg text-xs font-medium bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700/70 transition cursor-pointer"
+              >
+                Studio Session
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div>
+              <label for="contactNameInput" class="block text-xs font-medium text-zinc-400 mb-1.5">Contact Name</label>
+              <input
+                id="contactNameInput"
+                type="text"
+                value="Maya Lin"
+                maxlength="28"
+                class="w-full rounded-xl bg-zinc-950 border border-zinc-800 focus:border-sky-500 focus:outline-none px-3 py-2 text-sm text-white transition"
+              />
+            </div>
+
+            <div>
+              <label for="contactInitialsInput" class="block text-xs font-medium text-zinc-400 mb-1.5">Avatar Initials</label>
+              <input
+                id="contactInitialsInput"
+                type="text"
+                value="ML"
+                maxlength="2"
+                class="w-full rounded-xl bg-zinc-950 border border-zinc-800 focus:border-sky-500 focus:outline-none px-3 py-2 text-sm text-white uppercase transition"
+              />
+            </div>
+
+            <div>
+              <label for="headerTimestampInput" class="block text-xs font-medium text-zinc-400 mb-1.5">Header Label</label>
+              <input
+                id="headerTimestampInput"
+                type="text"
+                value="iMessage • Today 11:42 PM"
+                maxlength="32"
+                class="w-full rounded-xl bg-zinc-950 border border-zinc-800 focus:border-sky-500 focus:outline-none px-3 py-2 text-sm text-white transition"
+              />
+            </div>
+          </div>
+
+          <!-- VHS Toggle & Speed -->
+          <div class="pt-2 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-4">
+            <label class="inline-flex items-center gap-3 cursor-pointer select-none">
+              <input id="vhsToggleInput" type="checkbox" class="sr-only peer" />
+              <div class="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500 relative"></div>
+              <div>
+                <span class="text-sm font-medium text-zinc-200">Dark VHS Aesthetic</span>
+                <span class="block text-xs text-zinc-400">Adds subtle scanlines, tracking drift &amp; REC stamp</span>
+              </div>
+            </label>
+
+            <div class="flex items-center gap-2.5">
+              <label for="paceSelect" class="text-xs font-medium text-zinc-400">Animation Pace</label>
+              <select
+                id="paceSelect"
+                class="rounded-xl bg-zinc-950 border border-zinc-800 focus:border-sky-500 focus:outline-none px-3 py-1.5 text-xs sm:text-sm text-zinc-200 cursor-pointer"
+              >
+                <option value="0.75">Crisp (0.75x)</option>
+                <option value="1" selected>Natural (1.0x)</option>
+                <option value="1.35">Relaxed (1.35x)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages List Editor Card -->
+        <div class="rounded-2xl bg-zinc-900/85 border border-zinc-800/90 p-4 sm:p-5 shadow-xl space-y-4">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-sm font-semibold uppercase tracking-wider text-zinc-400">Message Sequence</h2>
+              <p class="text-xs text-zinc-500 mt-0.5">"Sent (Me)" messages type into the bar, pop up the Send button, and send automatically.</p>
+            </div>
+            <button
+              id="addMessageRowBtn"
+              type="button"
+              class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 text-sky-400 border border-zinc-700/80 transition flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              Add Message
+            </button>
+          </div>
+
+          <div id="messagesEditorList" class="space-y-2.5 max-h-[430px] overflow-y-auto pr-1">
+            <!-- Dynamically rendered rows -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Live iPhone Simulator Preview -->
+      <section class="lg:col-span-5 flex flex-col items-center">
+        <div class="iphone-bezel w-full max-w-[378px] rounded-[48px] p-3 relative select-none">
+          <!-- Screen Container -->
+          <div
+            id="phoneScreen"
+            class="vhs-tint relative bg-black rounded-[38px] overflow-hidden flex flex-col h-[720px] sm:h-[750px] border border-zinc-800/70"
+          >
+            <!-- VHS Overlay & Tracking Scanline -->
+            <div class="vhs-overlay"></div>
+            <div class="vhs-tracking-bar"></div>
+
+            <!-- Optional VHS REC Timestamp Corner -->
+            <div
+              id="vhsHud"
+              class="hidden absolute top-12 left-4 z-30 pointer-events-none flex items-center gap-2 px-2 py-0.5 rounded bg-black/65 border border-white/10 font-mono text-[11px] tracking-wider text-rose-400"
+            >
+              <span class="w-2 h-2 rounded-full bg-rose-500 rec-dot"></span>
+              <span>VHS • SP</span>
+              <span id="vhsTimecode" class="text-zinc-300">00:00:00</span>
+            </div>
+
+            <!-- Top Status Bar + Dynamic Island + iMessage Header -->
+            <div class="bg-[#121214]/95 backdrop-blur-xl border-b border-white/10 z-20 shrink-0">
+              <!-- iOS Status Bar -->
+              <div class="px-6 pt-3 pb-1.5 flex items-center justify-between text-[12px] font-semibold text-white">
+                <span id="iosClock">11:42</span>
+
+                <!-- Dynamic Island -->
+                <div class="dynamic-island w-24 h-6 rounded-full flex items-center justify-end pr-2 gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-sky-950 border border-sky-400/30"></span>
+                </div>
+
+                <!-- Signal / Wifi / Battery -->
+                <div class="flex items-center gap-1.5 text-white">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="2" y="14" width="3" height="7" rx="1"/>
+                    <rect x="7" y="11" width="3" height="10" rx="1"/>
+                    <rect x="12" y="7" width="3" height="14" rx="1"/>
+                    <rect x="17" y="3" width="3" height="18" rx="1"/>
+                  </svg>
+                  <div class="w-6 h-3 rounded-[4px] border border-white/60 p-[1.5px] flex items-center">
+                    <div class="w-full h-full bg-white rounded-[2px]"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- iMessage Navigation Bar (Back chevron, Avatar + Name, Circular Video Camera Button) -->
+              <div class="px-3.5 pt-1.5 pb-3 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <button
+                    id="replayHeaderBtn"
+                    type="button"
+                    title="Replay conversation"
+                    class="p-1.5 -ml-1 rounded-full text-sky-400 hover:bg-white/10 transition flex items-center cursor-pointer shrink-0"
+                  >
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                  </button>
+
+                  <!-- Contact Avatar + Name -->
+                  <div class="flex flex-col items-center cursor-pointer min-w-0 ml-1" onclick="document.getElementById('contactNameInput').focus()">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-600 to-zinc-800 border border-white/15 flex items-center justify-center text-xs font-semibold text-white shadow-inner">
+                      <span id="previewAvatarInitials">ML</span>
+                    </div>
+                    <div class="flex items-center gap-0.5 mt-0.5 max-w-[165px]">
+                      <span id="previewContactName" class="text-[12px] font-medium text-white truncate">Maya Lin</span>
+                      <svg class="w-3 h-3 text-zinc-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Circular Dark-Gray FaceTime / Video Camera Button (replaces any phone call button) -->
+                <button
+                  id="facetimeVideoBtn"
+                  type="button"
+                  aria-label="Start Video Call"
+                  title="FaceTime Video"
+                  class="facetime-circle-btn shrink-0"
+                >
+                  <svg class="w-6 h-5 text-white" viewBox="0 0 28 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="15.5" height="14" rx="3.5"/>
+                    <path d="M17.5 7.8l8-4.3v13l-8-4.3v-4.4z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Scrollable Chat Thread Area -->
+            <div
+              id="chatThread"
+              class="flex-1 overflow-y-auto px-3.5 py-3 flex flex-col justify-end bg-black relative z-10"
+            >
+              <div id="chatMessagesInner" class="flex flex-col space-y-2 w-full">
+                <!-- Header timestamp -->
+                <div class="text-center my-2">
+                  <span id="previewHeaderLabel" class="text-[11px] font-medium text-zinc-500 tracking-tight">
+                    iMessage • Today 11:42 PM
+                  </span>
+                </div>
+                <!-- Rendered messages appear here -->
+              </div>
+
+              <!-- Typing Indicator Bubble (from contact) -->
+              <div id="typingIndicator" class="hidden mt-2 flex items-end gap-2 animate-msg-in">
+                <div class="bg-[#262629] px-3.5 py-2.5 rounded-2xl rounded-bl-sm inline-flex items-center gap-1 border border-white/5">
+                  <span class="w-2 h-2 rounded-full bg-zinc-400 typing-dot"></span>
+                  <span class="w-2 h-2 rounded-full bg-zinc-400 typing-dot"></span>
+                  <span class="w-2 h-2 rounded-full bg-zinc-400 typing-dot"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Realistic iMessage Composer Bar with Pop-up Send Button -->
+            <div class="bg-[#121214]/95 backdrop-blur-xl border-t border-white/10 px-2.5 py-2.5 z-20 shrink-0">
+              <div class="flex items-end gap-2">
+                <!-- Plus Attachment Button -->
+                <button
+                  type="button"
+                  aria-label="Add attachment"
+                  class="w-8 h-8 rounded-full bg-zinc-800/90 hover:bg-zinc-700 text-zinc-300 flex items-center justify-center shrink-0 mb-0.5 transition cursor-pointer"
+                >
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+
+                <!-- Text Input Pill -->
+                <div class="flex-1 min-h-[36px] max-h-24 rounded-[19px] bg-[#1c1c1e] border border-white/12 px-3.5 py-1.5 flex items-center">
+                  <input
+                    id="composerInput"
+                    type="text"
+                    placeholder="iMessage"
+                    class="w-full bg-transparent text-[15px] text-white placeholder-zinc-500 focus:outline-none leading-snug"
+                  />
+                </div>
+
+                <!-- Pop-up Blue Send Button (appears smoothly when text is present or during send sequence) -->
+                <button
+                  id="sendButton"
+                  type="button"
+                  aria-label="Send message"
+                  class="send-btn-popup send-btn-hidden w-8 h-8 rounded-full bg-[#0a84ff] hover:bg-[#2292ff] text-white flex items-center justify-center shrink-0 mb-0.5 shadow-md shadow-sky-500/30 cursor-pointer"
+                >
+                  <svg class="w-4 h-4 translate-y-[0.5px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="19" x2="12" y2="5"/>
+                    <polyline points="5 12 12 5 19 12"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- iOS Home Indicator -->
+              <div class="mt-2.5 flex justify-center">
+                <div class="w-32 h-1 rounded-full bg-white/30"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Helper Note -->
+        <p class="text-xs text-zinc-500 text-center mt-3 max-w-sm">
+          Tip: Type in the iMessage bar to see the Send button pop up immediately, or click <span class="text-zinc-300 font-medium">Download Video</span> to record the full animated sequence.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <!-- Non-blocking Toast / Notice Box (replaces alert()) -->
+  <div
+    id="toastBox"
+    class="fixed bottom-5 right-5 z-50 hidden max-w-sm rounded-2xl bg-zinc-900 border border-zinc-700/90 px-4 py-3 text-sm text-zinc-100 shadow-2xl transition-all"
+  >
+    <div class="flex items-start gap-2.5">
+      <span id="toastIcon" class="mt-0.5 text-sky-400">●</span>
+      <p id="toastMessage" class="leading-snug"></p>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * iMessage Animated Chat Simulator & Video Exporter
+     * Architecture:
+     * - Centralized reactive `state` holding contact details, VHS toggle, pace, and message array.
+     * - Left editor synchronizes live with the right iPhone simulator preview.
+     * - Animation engine (`runConversationSequence`) drives realistic typing, send-button pop-up,
+     *   send-button press pulse, bubble pop-up, and smooth bottom-up scrolling.
+     * - Video exporter (`exportConversationVideo`) captures a high-res canvas stream rendered from
+     *   the live DOM/state at 30fps via MediaRecorder and downloads the resulting video file.
+     */
+    (function () {
+      const DEFAULT_PRESETS = {
+        midnight: [
+          { id: uid(), sender: 'them', text: 'Are you still awake? Just finished editing the clip.' },
+          { id: uid(), sender: 'me', text: 'Yeah I am! Send it over, let me see how the dark grade looks.' },
+          { id: uid(), sender: 'them', text: 'Added subtle VHS scanlines and kept the bubbles super clean.' },
+          { id: uid(), sender: 'me', text: 'That looks straight out of a late-night film.' }
+        ],
+        studio: [
+          { id: uid(), sender: 'me', text: 'Morning! Did the export finish rendering?' },
+          { id: uid(), sender: 'them', text: 'Yep! Smooth scrolling and clean bubble timing all the way through.' },
+          { id: uid(), sender: 'me', text: 'Awesome, exporting the final cut now.' }
+        ]
+      };
+
+      const state = {
+        contactName: 'Maya Lin',
+        contactInitials: 'ML',
+        headerLabel: 'iMessage • Today 11:42 PM',
+        vhsEnabled: false,
+        pace: 1.0,
+        messages: DEFAULT_PRESETS.midnight.map((m) => ({ ...m })),
+        isPlaying: false,
+        isExporting: false,
+        cancelToken: 0
+      };
+
+      // DOM References
+      const els = {
+        contactNameInput: document.getElementById('contactNameInput'),
+        contactInitialsInput: document.getElementById('contactInitialsInput'),
+        headerTimestampInput: document.getElementById('headerTimestampInput'),
+        vhsToggleInput: document.getElementById('vhsToggleInput'),
+        paceSelect: document.getElementById('paceSelect'),
+        presetMidnightBtn: document.getElementById('presetMidnightBtn'),
+        presetPlanBtn: document.getElementById('presetPlanBtn'),
+        addMessageRowBtn: document.getElementById('addMessageRowBtn'),
+        messagesEditorList: document.getElementById('messagesEditorList'),
+        phoneScreen: document.getElementById('phoneScreen'),
+        vhsHud: document.getElementById('vhsHud'),
+        vhsTimecode: document.getElementById('vhsTimecode'),
+        previewAvatarInitials: document.getElementById('previewAvatarInitials'),
+        previewContactName: document.getElementById('previewContactName'),
+        previewHeaderLabel: document.getElementById('previewHeaderLabel'),
+        chatThread: document.getElementById('chatThread'),
+        chatMessagesInner: document.getElementById('chatMessagesInner'),
+        typingIndicator: document.getElementById('typingIndicator'),
+        composerInput: document.getElementById('composerInput'),
+        sendButton: document.getElementById('sendButton'),
+        facetimeVideoBtn: document.getElementById('facetimeVideoBtn'),
+        replayHeaderBtn: document.getElementById('replayHeaderBtn'),
+        previewAnimBtn: document.getElementById('previewAnimBtn'),
+        previewBtnLabel: document.getElementById('previewBtnLabel'),
+        downloadVideoBtn: document.getElementById('downloadVideoBtn'),
+        downloadBtnLabel: document.getElementById('downloadBtnLabel'),
+        statusBanner: document.getElementById('statusBanner'),
+        statusText: document.getElementById('statusText'),
+        progressBarFill: document.getElementById('progressBarFill'),
+        progressPercent: document.getElementById('progressPercent'),
+        toastBox: document.getElementById('toastBox'),
+        toastMessage: document.getElementById('toastMessage')
+      };
+
+      function uid() {
+        return 'msg_' + Math.random().toString(36).slice(2, 9);
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function showToast(message) {
+        els.toastMessage.textContent = message;
+        els.toastBox.classList.remove('hidden');
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => {
+          els.toastBox.classList.add('hidden');
+        }, 3200);
+      }
+
+      function updateStatusBanner(visible, text = '', percent = 0) {
+        if (!visible) {
+          els.statusBanner.classList.add('hidden');
+          return;
+        }
+        els.statusBanner.classList.remove('hidden');
+        els.statusText.textContent = text;
+        const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+        els.progressBarFill.style.width = clamped + '%';
+        els.progressPercent.textContent = clamped + '%';
+      }
+
+      /**
+       * Updates Send button visibility smoothly whenever composer text changes
+       * or when explicitly forced during animated sending.
+       */
+      function syncSendButtonVisibility(forceVisible = false) {
+        const hasText = els.composerInput.value.trim().length > 0 || forceVisible;
+        if (hasText) {
+          els.sendButton.classList.remove('send-btn-hidden');
+          els.sendButton.classList.add('send-btn-visible');
+        } else {
+          els.sendButton.classList.remove('send-btn-visible');
+          els.sendButton.classList.add('send-btn-hidden');
+        }
+      }
+
+      /**
+       * Synchronizes header details, avatar initials, and VHS mode.
+       */
+      function syncHeaderAndLook() {
+        els.previewContactName.textContent = state.contactName.trim() || 'Contact';
+        const initials = (state.contactInitials.trim() || state.contactName.trim().slice(0, 2) || 'IM').toUpperCase();
+        els.previewAvatarInitials.textContent = initials;
+        els.previewHeaderLabel.textContent = state.headerLabel.trim() || 'iMessage';
+
+        if (state.vhsEnabled) {
+          els.phoneScreen.classList.add('vhs-active');
+          els.vhsHud.classList.remove('hidden');
+        } else {
+          els.phoneScreen.classList.remove('vhs-active');
+          els.vhsHud.classList.add('hidden');
+        }
+      }
+
+      /**
+       * Renders editable message rows in the left control panel.
+       */
+      function renderEditorList() {
+        els.messagesEditorList.innerHTML = '';
+
+        state.messages.forEach((msg, index) => {
+          const row = document.createElement('div');
+          row.className = 'flex items-center gap-2 bg-zinc-950/90 border border-zinc-800/90 rounded-xl p-2.5';
+
+          const senderBtn = document.createElement('button');
+          senderBtn.type = 'button';
+          const isMe = msg.sender === 'me';
+          senderBtn.className = `px-2.5 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition cursor-pointer ${
+            isMe
+              ? 'bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500/30'
+              : 'bg-zinc-800 text-zinc-300 border border-zinc-700 hover:bg-zinc-700'
+          }`;
+          senderBtn.textContent = isMe ? 'Sent (Me)' : 'Received';
+          senderBtn.title = 'Click to toggle sender';
+          senderBtn.addEventListener('click', () => {
+            msg.sender = msg.sender === 'me' ? 'them' : 'me';
+            renderEditorList();
+          });
+
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.value = msg.text;
+          input.placeholder = 'Write message text...';
+          input.className = 'flex-1 min-w-0 bg-transparent text-sm text-white placeholder-zinc-600 focus:outline-none px-1.5';
+          input.addEventListener('input', (e) => {
+            msg.text = e.target.value;
+          });
+
+          const moveUpBtn = document.createElement('button');
+          moveUpBtn.type = 'button';
+          moveUpBtn.title = 'Move up';
+          moveUpBtn.disabled = index === 0;
+          moveUpBtn.className = 'p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 disabled:opacity-25 disabled:pointer-events-none transition cursor-pointer';
+          moveUpBtn.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="18 15 12 9 6 15"/></svg>';
+          moveUpBtn.addEventListener('click', () => {
+            if (index > 0) {
+              const temp = state.messages[index - 1];
+              state.messages[index - 1] = state.messages[index];
+              state.messages[index] = temp;
+              renderEditorList();
+            }
+          });
+
+          const deleteBtn = document.createElement('button');
+          deleteBtn.type = 'button';
+          deleteBtn.title = 'Delete message';
+          deleteBtn.className = 'p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition cursor-pointer';
+          deleteBtn.innerHTML = '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+          deleteBtn.addEventListener('click', () => {
+            if (state.messages.length <= 1) {
+              showToast('Keep at least one message in the conversation.');
+              return;
+            }
+            state.messages.splice(index, 1);
+            renderEditorList();
+          });
+
+          row.appendChild(senderBtn);
+          row.appendChild(input);
+          row.appendChild(moveUpBtn);
+          row.appendChild(deleteBtn);
+          els.messagesEditorList.appendChild(row);
+        });
+      }
+
+      /**
+       * Clears rendered chat bubbles while preserving the top header label.
+       */
+      function clearChatBubbles() {
+        const headerEl = els.previewHeaderLabel.parentElement;
+        els.chatMessagesInner.innerHTML = '';
+        if (headerEl) {
+          els.chatMessagesInner.appendChild(headerEl);
+        }
+        els.typingIndicator.classList.add('hidden');
+        els.composerInput.value = '';
+        syncSendButtonVisibility(false);
+      }
+
+      /**
+       * Appends a single iMessage bubble and scrolls smoothly from the bottom up.
+       */
+      function appendBubble(sender, text, isLastInGroup = true) {
+        const isMe = sender === 'me';
+        const row = document.createElement('div');
+        row.className = `flex w-full animate-msg-in ${isMe ? 'justify-end' : 'justify-start'}`;
+
+        const bubble = document.createElement('div');
+        const cornerClass = isMe
+          ? (isLastInGroup ? 'rounded-[18px] rounded-br-[5px]' : 'rounded-[18px]')
+          : (isLastInGroup ? 'rounded-[18px] rounded-bl-[5px]' : 'rounded-[18px]');
+
+        bubble.className = `max-w-[76%] px-3.5 py-2 text-[15px] leading-[1.35] break-words shadow-sm ${cornerClass} ${
+          isMe
+            ? 'bg-[#0a84ff] text-white'
+            : 'bg-[#262629] text-[#f2f2f7]'
+        }`;
+        bubble.textContent = text;
+
+        row.appendChild(bubble);
+        els.chatMessagesInner.appendChild(row);
+
+        // Smooth bottom-up scroll
+        requestAnimationFrame(() => {
+          els.chatThread.scrollTo({
+            top: els.chatThread.scrollHeight,
+            behavior: 'smooth'
+          });
+        });
+      }
+
+      /**
+       * Runs the full animated chat sequence.
+       * For "me" messages: types text into composer, pops up the Send button smoothly,
+       * pulses Send, clears composer, and pops up the blue iMessage bubble.
+       * For "them" messages: shows animated typing dots, then pops up the gray bubble.
+       */
+      async function runConversationSequence(token, onProgress = null) {
+        clearChatBubbles();
+        const pace = state.pace || 1.0;
+        const validMessages = state.messages.filter((m) => m.text.trim().length > 0);
+        const total = Math.max(1, validMessages.length);
+
+        const vhsStart = performance.now();
+        const vhsInterval = setInterval(() => {
+          const elapsed = Math.floor((performance.now() - vhsStart) / 1000);
+          const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+          const secs = String(elapsed % 60).padStart(2, '0');
+          els.vhsTimecode.textContent = `00:${mins}:${secs}`;
+        }, 250);
+
+        try {
+          for (let i = 0; i < validMessages.length; i++) {
+            if (state.cancelToken !== token) return false;
+
+            const msg = validMessages[i];
+            const nextMsg = validMessages[i + 1];
+            const isLastInGroup = !nextMsg || nextMsg.sender !== msg.sender;
+
+            if (msg.sender === 'me') {
+              els.composerInput.value = '';
+              syncSendButtonVisibility(false);
+              await sleep(240 * pace);
+
+              // Type characters into composer; Send button pops up immediately and stays visible
+              const fullText = msg.text.trim();
+              const stepDelay = Math.max(22, Math.min(54, (980 * pace) / Math.max(1, fullText.length)));
+
+              for (let c = 1; c <= fullText.length; c++) {
+                if (state.cancelToken !== token) return false;
+                els.composerInput.value = fullText.slice(0, c);
+                syncSendButtonVisibility(true);
+                await sleep(stepDelay);
+              }
+
+              // Hold popped-up Send button clearly before pressing so it shows vividly in video export
+              syncSendButtonVisibility(true);
+              await sleep(360 * pace);
+              if (state.cancelToken !== token) return false;
+
+              // Simulate pressing Send button with pop/pulse feedback
+              els.sendButton.classList.add('send-btn-pulse');
+              await sleep(220);
+              els.sendButton.classList.remove('send-btn-pulse');
+              await sleep(110);
+
+              els.composerInput.value = '';
+              syncSendButtonVisibility(false);
+
+              appendBubble('me', fullText, isLastInGroup);
+              await sleep(500 * pace);
+            } else {
+              // Incoming message typing indicator
+              els.typingIndicator.classList.remove('hidden');
+              requestAnimationFrame(() => {
+                els.chatThread.scrollTop = els.chatThread.scrollHeight;
+              });
+
+              const typingDuration = Math.min(1800, Math.max(650, msg.text.length * 28)) * pace;
+              await sleep(typingDuration);
+              if (state.cancelToken !== token) return false;
+
+              els.typingIndicator.classList.add('hidden');
+              appendBubble('them', msg.text.trim(), isLastInGroup);
+              await sleep(480 * pace);
+            }
+
+            if (typeof onProgress === 'function') {
+              onProgress(((i + 1) / total) * 100);
+            }
+          }
+
+          await sleep(450 * pace);
+          return state.cancelToken === token;
+        } finally {
+          clearInterval(vhsInterval);
+        }
+      }
+
+      /**
+       * Renders a realistic high-resolution frame onto an offscreen canvas
+       * matching the current simulator state so video export works reliably across browsers.
+       */
+      function renderSimulatorToCanvas(ctx, width, height, elapsedSec) {
+        ctx.clearRect(0, 0, width, height);
+
+        // Background
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
+
+        const padX = Math.round(width * 0.055);
+        const topBarH = Math.round(height * 0.13);
+        const bottomBarH = Math.round(height * 0.115);
+
+        // Top Header Bar
+        ctx.fillStyle = '#121214';
+        ctx.fillRect(0, 0, width, topBarH);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, topBarH);
+        ctx.lineTo(width, topBarH);
+        ctx.stroke();
+
+        // Avatar circle
+        const avatarR = Math.round(width * 0.045);
+        const avatarX = Math.round(width * 0.5);
+        const avatarY = Math.round(topBarH * 0.52);
+
+        ctx.fillStyle = '#27272a';
+        ctx.beginPath();
+        ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `600 ${Math.round(avatarR * 0.85)}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(els.previewAvatarInitials.textContent || 'ML', avatarX, avatarY + 1);
+
+        // Contact Name under avatar
+        ctx.fillStyle = '#f4f4f5';
+        ctx.font = `500 ${Math.round(width * 0.032)}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+        ctx.fillText(els.previewContactName.textContent || 'Maya Lin', avatarX, avatarY + avatarR + 16);
+        // Circular Dark-Gray Video Camera Icon on Right (matching reference image)
+        const camBtnR = Math.round(width * 0.055);
+        const camBtnX = width - padX - camBtnR;
+        const camBtnY = Math.round(topBarH * 0.62);
+
+        ctx.fillStyle = '#212124';
+        ctx.beginPath();
+        ctx.arc(camBtnX, camBtnY, camBtnR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // White rounded-rectangle video camera outline + trapezoid lens hood
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3.6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const boxW = camBtnR * 0.96;
+        const boxH = camBtnR * 0.68;
+        const boxX = camBtnX - boxW * 0.64;
+        const boxY = camBtnY - boxH * 0.5;
+        roundRectPath(ctx, boxX, boxY, boxW, boxH, 7);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(boxX + boxW, camBtnY - boxH * 0.24);
+        ctx.lineTo(boxX + boxW + camBtnR * 0.42, camBtnY - boxH * 0.48);
+        ctx.lineTo(boxX + boxW + camBtnR * 0.42, camBtnY + boxH * 0.48);
+        ctx.lineTo(boxX + boxW, camBtnY + boxH * 0.24);
+        ctx.closePath();
+        ctx.stroke();
+
+        // Chat bubbles area
+        const threadTop = topBarH + 16;
+        const threadBottom = height - bottomBarH - 16;
+        const bubbleElements = Array.from(els.chatMessagesInner.querySelectorAll('div.flex.w-full'));
+        const fontSize = Math.round(width * 0.041);
+        const lineHeight = Math.round(fontSize * 1.35);
+        const maxBubbleW = Math.round(width * 0.72);
+
+        // Precompute bubble heights
+        const items = bubbleElements.map((row) => {
+          const isMe = row.classList.contains('justify-end');
+          const bubble = row.querySelector('div');
+          const text = bubble ? bubble.textContent : '';
+          ctx.font = `400 ${fontSize}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+          const lines = wrapCanvasText(ctx, text, maxBubbleW - 36);
+          const h = lines.length * lineHeight + 22;
+          const longestLine = lines.reduce((m, l) => Math.max(m, ctx.measureText(l).width), 0);
+          const w = Math.min(maxBubbleW, Math.max(68, Math.ceil(longestLine + 36)));
+          return { isMe, lines, h, w };
+        });
+
+        const totalStackH = items.reduce((sum, it) => sum + it.h + 12, 0);
+        let cursorY = Math.max(threadTop, threadBottom - totalStackH);
+
+        // Clip chat region
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, topBarH + 1, width, threadBottom - topBarH);
+        ctx.clip();
+
+        for (const it of items) {
+          const x = it.isMe ? width - padX - it.w : padX;
+          ctx.fillStyle = it.isMe ? '#0a84ff' : '#262629';
+          roundRectPath(ctx, x, cursorY, it.w, it.h, 22);
+          ctx.fill();
+
+          ctx.fillStyle = it.isMe ? '#ffffff' : '#f2f2f7';
+          ctx.font = `400 ${fontSize}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+
+          it.lines.forEach((line, idx) => {
+            ctx.fillText(line, x + 18, cursorY + 11 + idx * lineHeight);
+          });
+
+          cursorY += it.h + 12;
+        }
+
+        // Typing indicator if visible
+        if (!els.typingIndicator.classList.contains('hidden')) {
+          const dotBubbleW = 84;
+          const dotBubbleH = 44;
+          ctx.fillStyle = '#262629';
+          roundRectPath(ctx, padX, cursorY, dotBubbleW, dotBubbleH, 20);
+          ctx.fill();
+
+          for (let d = 0; d < 3; d++) {
+            const bounce = Math.sin(elapsedSec * 7 + d * 1.1) * 4;
+            ctx.fillStyle = '#a1a1aa';
+            ctx.beginPath();
+            ctx.arc(padX + 22 + d * 20, cursorY + dotBubbleH / 2 + bounce, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+
+        // Bottom Composer Bar
+        const compY = height - bottomBarH;
+        ctx.fillStyle = '#121214';
+        ctx.fillRect(0, compY, width, bottomBarH);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.beginPath();
+        ctx.moveTo(0, compY);
+        ctx.lineTo(width, compY);
+        ctx.stroke();
+
+        const hasComposerText = els.composerInput.value.trim().length > 0;
+        const isSendPoppedUp = hasComposerText || els.sendButton.classList.contains('send-btn-visible');
+        const sendR = Math.round(width * 0.044);
+        const sendX = width - padX - sendR;
+        const inputCenterY = compY + Math.round(bottomBarH * 0.42);
+        const inputW = isSendPoppedUp ? (sendX - sendR - 14 - padX) : (width - padX * 2);
+        const inputH = Math.round(bottomBarH * 0.46);
+        const inputY = inputCenterY - inputH / 2;
+
+        ctx.fillStyle = '#1c1c1e';
+        roundRectPath(ctx, padX, inputY, inputW, inputH, inputH / 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+        ctx.stroke();
+
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.font = `400 ${Math.round(width * 0.038)}px -apple-system, BlinkMacSystemFont, Inter, sans-serif`;
+        if (hasComposerText) {
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(els.composerInput.value, padX + 16, inputCenterY + 1);
+        } else {
+          ctx.fillStyle = '#71717a';
+          ctx.fillText('iMessage', padX + 16, inputCenterY + 1);
+        }
+
+        // Pop-up Send Button in Canvas when typing/sending
+        if (isSendPoppedUp) {
+          const isPulsing = els.sendButton.classList.contains('send-btn-pulse');
+          const r = isPulsing ? sendR * 1.18 : sendR;
+          ctx.fillStyle = '#0a84ff';
+          ctx.beginPath();
+          ctx.arc(sendX, inputCenterY, r, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(sendX, inputCenterY + r * 0.45);
+          ctx.lineTo(sendX, inputCenterY - r * 0.45);
+          ctx.moveTo(sendX - r * 0.4, inputCenterY - r * 0.05);
+          ctx.lineTo(sendX, inputCenterY - r * 0.45);
+          ctx.lineTo(sendX + r * 0.4, inputCenterY - r * 0.05);
+          ctx.stroke();
+        }
+
+        // Optional Dark VHS Scanlines & REC Stamp
+        if (state.vhsEnabled) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+          for (let y = 0; y < height; y += 6) {
+            ctx.fillRect(0, y, width, 2);
+          }
+
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+          roundRectPath(ctx, padX, topBarH + 14, 150, 30, 8);
+          ctx.fill();
+
+          ctx.fillStyle = '#fb7185';
+          ctx.beginPath();
+          ctx.arc(padX + 16, topBarH + 29, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#f4f4f5';
+          ctx.font = '600 13px monospace';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`VHS ${els.vhsTimecode.textContent}`, padX + 28, topBarH + 30);
+        }
+      }
+
+      function roundRectPath(ctx, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
+      }
+
+      function wrapCanvasText(ctx, text, maxWidth) {
+        const words = text.split(/\s+/).filter(Boolean);
+        if (!words.length) return [''];
+        const lines = [];
+        let current = words[0];
+
+        for (let i = 1; i < words.length; i++) {
+          const test = current + ' ' + words[i];
+          if (ctx.measureText(test).width <= maxWidth) {
+            current = test;
+          } else {
+            lines.push(current);
+            current = words[i];
+          }
+        }
+        lines.push(current);
+        return lines;
+      }
+
+      function pickSupportedMimeType() {
+        const candidates = [
+          'video/webm;codecs=vp9',
+          'video/webm;codecs=vp8',
+          'video/webm',
+          'video/mp4'
+        ];
+        if (typeof MediaRecorder === 'undefined') return '';
+        for (const mime of candidates) {
+          if (MediaRecorder.isTypeSupported(mime)) return mime;
+        }
+        return '';
+      }
+
+      /**
+       * Records the animated conversation into a downloadable video file.
+       */
+      async function handleDownloadVideo() {
+        if (state.isExporting) return;
+
+        if (typeof MediaRecorder === 'undefined') {
+          showToast('Video recording is not supported in this browser.');
+          return;
+        }
+
+        const mimeType = pickSupportedMimeType();
+        if (!mimeType) {
+          showToast('No supported video codec found for MediaRecorder.');
+          return;
+        }
+
+        state.cancelToken += 1;
+        const token = state.cancelToken;
+        state.isExporting = true;
+        state.isPlaying = true;
+        els.downloadVideoBtn.disabled = true;
+        els.previewAnimBtn.disabled = true;
+        els.downloadBtnLabel.textContent = 'Recording...';
+        updateStatusBanner(true, 'Recording animated iMessage video...', 2);
+
+        const width = 720;
+        const height = 1280;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        const stream = canvas.captureStream(30);
+        const chunks = [];
+        let recorder;
+
+        try {
+          recorder = new MediaRecorder(stream, { mimeType });
+        } catch (err) {
+          state.isExporting = false;
+          state.isPlaying = false;
+          els.downloadVideoBtn.disabled = false;
+          els.previewAnimBtn.disabled = false;
+          els.downloadBtnLabel.textContent = 'Download Video';
+          updateStatusBanner(false);
+          showToast('Could not initialize video recorder.');
+          return;
+        }
+
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            chunks.push(e.data);
+          }
+        };
+
+        let rafId = null;
+        const startTime = performance.now();
+
+        const drawFrame = () => {
+          if (!state.isExporting) return;
+          const elapsedSec = (performance.now() - startTime) / 1000;
+          renderSimulatorToCanvas(ctx, width, height, elapsedSec);
+          rafId = requestAnimationFrame(drawFrame);
+        };
+
+        recorder.start(120);
+        drawFrame();
+
+        try {
+          await runConversationSequence(token, (pct) => {
+            updateStatusBanner(true, 'Rendering messages & send animations...', pct);
+          });
+        } finally {
+          if (rafId) cancelAnimationFrame(rafId);
+          renderSimulatorToCanvas(ctx, width, height, (performance.now() - startTime) / 1000);
+        }
+
+        const blob = await new Promise((resolve) => {
+          recorder.onstop = () => {
+            resolve(new Blob(chunks, { type: mimeType }));
+          };
+          recorder.stop();
+        });
+
+        stream.getTracks().forEach((t) => t.stop());
+
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const safeName = (state.contactName || 'imessage').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}-chat.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+        state.isExporting = false;
+        state.isPlaying = false;
+        els.downloadVideoBtn.disabled = false;
+        els.previewAnimBtn.disabled = false;
+        els.downloadBtnLabel.textContent = 'Download Video';
+        els.previewBtnLabel.textContent = 'Play Preview';
+        updateStatusBanner(true, `Exported ${safeName}-chat.${ext}`, 100);
+        showToast(`Video downloaded (${ext.toUpperCase()})!`);
+
+        setTimeout(() => {
+          if (!state.isExporting) updateStatusBanner(false);
+        }, 3200);
+      }
+
+      /**
+       * Plays or restarts the live conversation preview.
+       */
+      async function handleTogglePreview() {
+        if (state.isExporting) return;
+
+        state.cancelToken += 1;
+        const token = state.cancelToken;
+        state.isPlaying = true;
+        els.previewBtnLabel.textContent = 'Restart Preview';
+
+        await runConversationSequence(token);
+
+        if (state.cancelToken === token) {
+          state.isPlaying = false;
+          els.previewBtnLabel.textContent = 'Play Preview';
+        }
+      }
+
+      // Event Listeners
+      els.contactNameInput.addEventListener('input', (e) => {
+        state.contactName = e.target.value;
+        if (!state.contactInitials.trim()) {
+          els.contactInitialsInput.value = state.contactName.trim().slice(0, 2).toUpperCase();
+          state.contactInitials = els.contactInitialsInput.value;
+        }
+        syncHeaderAndLook();
+      });
+
+      els.contactInitialsInput.addEventListener('input', (e) => {
+        state.contactInitials = e.target.value;
+        syncHeaderAndLook();
+      });
+
+      els.headerTimestampInput.addEventListener('input', (e) => {
+        state.headerLabel = e.target.value;
+        syncHeaderAndLook();
+      });
+
+      els.vhsToggleInput.addEventListener('change', (e) => {
+        state.vhsEnabled = e.target.checked;
+        syncHeaderAndLook();
+      });
+
+      els.paceSelect.addEventListener('change', (e) => {
+        state.pace = parseFloat(e.target.value) || 1.0;
+      });
+
+      els.presetMidnightBtn.addEventListener('click', () => {
+        state.messages = DEFAULT_PRESETS.midnight.map((m) => ({ ...m, id: uid() }));
+        renderEditorList();
+        handleTogglePreview();
+      });
+
+      els.presetPlanBtn.addEventListener('click', () => {
+        state.messages = DEFAULT_PRESETS.studio.map((m) => ({ ...m, id: uid() }));
+        renderEditorList();
+        handleTogglePreview();
+      });
+
+      els.addMessageRowBtn.addEventListener('click', () => {
+        const lastSender = state.messages.length ? state.messages[state.messages.length - 1].sender : 'them';
+        state.messages.push({
+          id: uid(),
+          sender: lastSender === 'me' ? 'them' : 'me',
+          text: ''
+        });
+        renderEditorList();
+      });
+
+      // Interactive composer typing & manual Send button click in live preview
+      els.composerInput.addEventListener('input', () => {
+        syncSendButtonVisibility(false);
+      });
+
+      function sendManualComposerMessage() {
+        const text = els.composerInput.value.trim();
+        if (!text) return;
+
+        els.sendButton.classList.add('send-btn-pulse');
+        setTimeout(() => els.sendButton.classList.remove('send-btn-pulse'), 150);
+
+        state.messages.push({ id: uid(), sender: 'me', text });
+        renderEditorList();
+        appendBubble('me', text, true);
+        els.composerInput.value = '';
+        syncSendButtonVisibility(false);
+      }
+
+      els.sendButton.addEventListener('click', sendManualComposerMessage);
+      els.composerInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          sendManualComposerMessage();
+        }
+      });
+
+      els.facetimeVideoBtn.addEventListener('click', () => {
+        showToast(`Starting FaceTime video with ${state.contactName || 'Contact'}...`);
+      });
+
+      els.replayHeaderBtn.addEventListener('click', handleTogglePreview);
+      els.previewAnimBtn.addEventListener('click', handleTogglePreview);
+      els.downloadVideoBtn.addEventListener('click', handleDownloadVideo);
+
+      // Initial render and automatic preview run
+      syncHeaderAndLook();
+      renderEditorList();
+      handleTogglePreview();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,2888 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>iMessage Chat Simulator &amp; Video Exporter</title>
+  <style>
+    :root {
+      --bg-app: #09090b;
+      --bg-panel: #111114;
+      --bg-card: #18181c;
+      --bg-input: #0e0e11;
+      --border-subtle: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text-main: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --ios-blue: #007aff;
+      --ios-green: #34c759;
+      --accent: #007aff;
+      --font-ios: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-main);
+      font-family: var(--font-ios);
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(161, 161, 170, 0.25);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(161, 161, 170, 0.42);
+    }
+
+    /* App Layout */
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .studio-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(9, 9, 11, 0.9);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .studio-header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #38bdf8, #007aff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(0, 122, 255, 0.28);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 2px 0 0;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 9px 14px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.14s ease, background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #222227;
+      color: var(--text-main);
+      border-color: var(--border-strong);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #2c2c33;
+    }
+
+    .btn-primary {
+      background: var(--ios-blue);
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #1a88ff;
+    }
+
+    .btn-sync-active {
+      background: #e11d48 !important;
+      color: #ffffff !important;
+      border-color: #fb7185 !important;
+      box-shadow: 0 0 18px rgba(225, 29, 72, 0.45);
+    }
+
+    .status-banner {
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(20, 20, 24, 0.96);
+    }
+
+    .status-banner.hidden {
+      display: none;
+    }
+
+    .status-banner-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .progress-track {
+      width: 160px;
+      height: 8px;
+      border-radius: 9999px;
+      background: #27272a;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--ios-blue);
+      border-radius: 9999px;
+      transition: width 0.14s ease;
+    }
+
+    /* Main Grid */
+    .workspace {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+      display: grid;
+      grid-template-columns: 1.25fr 0.95fr;
+      gap: 28px;
+      align-items: start;
+      flex: 1;
+    }
+
+    @media (max-width: 1024px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .editor-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.35);
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      color: var(--text-dim);
+      margin: 3px 0 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 640px) {
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .field-input,
+    .field-select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-strong);
+      border-radius: 11px;
+      padding: 9px 12px;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .field-input:focus,
+    .field-select:focus {
+      border-color: var(--ios-blue);
+    }
+
+    .controls-bar {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    /* Switch toggle */
+    .switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-wrap input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-pill {
+      width: 42px;
+      height: 24px;
+      background: #3f3f46;
+      border-radius: 9999px;
+      position: relative;
+      transition: background-color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .switch-pill::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #ffffff;
+      border-radius: 9999px;
+      transition: transform 0.2s ease;
+    }
+
+    .switch-wrap input:checked + .switch-pill {
+      background: var(--ios-blue);
+    }
+
+    .switch-wrap input:checked + .switch-pill::after {
+      transform: translateX(18px);
+    }
+
+    /* Audio / Song Studio Card */
+    .audio-drop-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--bg-input);
+      border: 1px dashed var(--border-strong);
+      border-radius: 13px;
+      padding: 12px 14px;
+    }
+
+    .audio-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .audio-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(0, 122, 255, 0.15);
+      color: #60a5fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .audio-filename {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-main);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .audio-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .waveform-canvas {
+      width: 100%;
+      height: 44px;
+      border-radius: 10px;
+      background: #0c0c0f;
+      border: 1px solid var(--border-subtle);
+      margin-top: 12px;
+      display: block;
+    }
+
+    .audio-sliders {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 640px) {
+      .audio-sliders {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .range-group {
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 11px;
+      padding: 8px 12px;
+    }
+
+    .range-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .range-group input[type="range"] {
+      width: 100%;
+      accent-color: var(--ios-blue);
+      cursor: pointer;
+    }
+
+    /* Message Sequence Rows */
+    .messages-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 450px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .msg-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 13px;
+      padding: 10px;
+      transition: border-color 0.15s ease;
+    }
+
+    .msg-row:focus-within {
+      border-color: rgba(0, 122, 255, 0.55);
+    }
+
+    .msg-row.is-sync-highlight {
+      border-color: #fb7185;
+      box-shadow: 0 0 0 1px rgba(251, 113, 133, 0.35);
+    }
+
+    .sender-pill {
+      padding: 6px 10px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      flex-shrink: 0;
+      transition: background-color 0.15s ease;
+    }
+
+    .sender-pill.is-me {
+      background: rgba(0, 122, 255, 0.18);
+      color: #60a5fa;
+      border-color: rgba(0, 122, 255, 0.35);
+    }
+
+    .sender-pill.is-me.is-sms {
+      background: rgba(52, 199, 89, 0.18);
+      color: #4ade80;
+      border-color: rgba(52, 199, 89, 0.35);
+    }
+
+    .sender-pill.is-them {
+      background: #222228;
+      color: #d4d4d8;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .msg-text-area {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 13.5px;
+      line-height: 1.4;
+      resize: vertical;
+      min-height: 36px;
+      max-height: 120px;
+      padding: 4px 6px;
+      outline: none;
+    }
+
+    .delay-box {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #18181d;
+      border: 1px solid var(--border-strong);
+      border-radius: 9px;
+      padding: 4px 7px;
+      flex-shrink: 0;
+    }
+
+    .delay-box span {
+      font-size: 11px;
+      color: var(--text-dim);
+      user-select: none;
+    }
+
+    .delay-input {
+      width: 44px;
+      background: transparent;
+      border: none;
+      color: #e4e4e7;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px;
+      text-align: right;
+      outline: none;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 6px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .icon-btn:hover:not(:disabled) {
+      background: #232329;
+      color: #ffffff;
+    }
+
+    .icon-btn.danger:hover {
+      background: rgba(244, 63, 94, 0.14);
+      color: #fb7185;
+    }
+
+    .icon-btn:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+    }
+
+    /* Right Preview Column & Realistic iPhone Frame */
+    .preview-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: sticky;
+      top: 84px;
+    }
+
+    .iphone-bezel {
+      width: 100%;
+      max-width: 382px;
+      border-radius: 48px;
+      padding: 12px;
+      background: linear-gradient(145deg, #27272a 0%, #111113 45%, #18181b 100%);
+      box-shadow:
+        0 0 0 2px #3f3f46,
+        0 0 0 5px #09090b,
+        0 25px 70px -12px rgba(0, 0, 0, 0.92),
+        inset 0 0 12px rgba(255, 255, 255, 0.08);
+      user-select: none;
+    }
+
+    .phone-screen {
+      position: relative;
+      background: #000000;
+      border-radius: 38px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 740px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+    }
+
+    /* Top Status Bar & iMessage Header */
+    .ios-top-bar {
+      background: rgba(18, 18, 20, 0.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      z-index: 20;
+      flex-shrink: 0;
+    }
+
+    .ios-status-row {
+      padding: 12px 24px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .dynamic-island {
+      width: 96px;
+      height: 24px;
+      border-radius: 9999px;
+      background: #000000;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+    }
+
+    .island-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background: #0c2340;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .ios-nav-row {
+      padding: 4px 14px 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ios-back-btn {
+      background: transparent;
+      border: none;
+      color: #0a84ff;
+      padding: 6px;
+      margin-left: -4px;
+      border-radius: 9999px;
+      display: inline-flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .ios-contact-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .ios-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 9999px;
+      background: linear-gradient(145deg, #52525b, #27272a);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .ios-contact-name-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-top: 3px;
+      max-width: 170px;
+    }
+
+    .ios-contact-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Circular dark-gray FaceTime/video camera button */
+    .facetime-circle-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 9999px;
+      background: radial-gradient(circle at 30% 25%, #2f2f33 0%, #1f1f22 68%, #18181b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.6),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.16s ease;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .facetime-circle-btn:hover {
+      transform: scale(1.06);
+      filter: brightness(1.12);
+    }
+
+    .facetime-circle-btn:active {
+      transform: scale(0.94);
+    }
+
+    /* Chat Scrollable Thread */
+    .chat-thread {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      background: #000000;
+      position: relative;
+      z-index: 10;
+    }
+
+    .chat-messages-inner {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      width: 100%;
+    }
+
+    .chat-timestamp {
+      text-align: center;
+      margin: 6px 0 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #71717a;
+    }
+
+    .bubble-row {
+      display: flex;
+      width: 100%;
+      animation: msgPopUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .bubble-row.me {
+      justify-content: flex-end;
+    }
+
+    .bubble-row.them {
+      justify-content: flex-start;
+    }
+
+    .chat-bubble {
+      max-width: 76%;
+      padding: 8px 14px;
+      font-size: 15px;
+      line-height: 1.35;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .chat-bubble.me {
+      background: var(--accent);
+      color: #ffffff;
+      border-radius: 18px 18px 5px 18px;
+    }
+
+    .chat-bubble.me.not-tail {
+      border-radius: 18px;
+    }
+
+    .chat-bubble.them {
+      background: #262629;
+      color: #f2f2f7;
+      border-radius: 18px 18px 18px 5px;
+    }
+
+    .chat-bubble.them.not-tail {
+      border-radius: 18px;
+    }
+
+    @keyframes msgPopUp {
+      0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.94);
+      }
+      70% {
+        opacity: 1;
+        transform: translateY(-2px) scale(1.01);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Typing Indicator */
+    .typing-wrap {
+      margin-top: 8px;
+      display: flex;
+      align-items: flex-end;
+      animation: msgPopUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .typing-wrap.hidden {
+      display: none;
+    }
+
+    .typing-bubble {
+      background: #262629;
+      padding: 10px 14px;
+      border-radius: 18px 18px 18px 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 9999px;
+      background: #a1a1aa;
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.18s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.36s;
+    }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+      30% {
+        transform: translateY(-4px);
+        opacity: 1;
+      }
+    }
+
+    /* Multi-line Expanding Composer Bar matching reference image */
+    .ios-composer-bar {
+      background: rgba(14, 14, 16, 0.96);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 10px 10px;
+      z-index: 20;
+      flex-shrink: 0;
+    }
+
+    .composer-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .plus-circle-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 9999px;
+      background: #252528;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e4e4e7;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      align-self: flex-end;
+      margin-bottom: 1px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    .plus-circle-btn:hover {
+      background: #323236;
+    }
+
+    /* Rounded-rectangle multi-line input pill with embedded bottom-right Send button */
+    .input-pill-container {
+      flex: 1;
+      min-width: 0;
+      min-height: 36px;
+      background: #1c1c1e;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 20px;
+      padding: 4px 5px 4px 14px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      transition: border-color 0.15s ease;
+    }
+
+    .input-pill-container:focus-within {
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .composer-textarea {
+      flex: 1;
+      min-width: 0;
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 15px;
+      line-height: 20px;
+      min-height: 26px;
+      max-height: 112px;
+      padding: 3px 0;
+      margin: 0;
+      resize: none;
+      overflow-y: auto;
+      outline: none;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .composer-textarea::placeholder {
+      color: #71717a;
+    }
+
+    /* Circular Upward-Arrow Send Button aligned bottom-right inside the expanding pill */
+    .send-arrow-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 9999px;
+      background: var(--accent);
+      border: none;
+      color: #ffffff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      align-self: flex-end;
+      cursor: pointer;
+      transition:
+        opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+        transform 0.24s cubic-bezier(0.34, 1.56, 0.64, 1),
+        width 0.2s ease,
+        margin 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .send-arrow-btn.send-hidden {
+      opacity: 0;
+      transform: scale(0.35);
+      width: 0;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .send-arrow-btn.send-visible {
+      opacity: 1;
+      transform: scale(1);
+      width: 28px;
+      pointer-events: auto;
+    }
+
+    .send-arrow-btn.send-pulse {
+      transform: scale(1.22) !important;
+      box-shadow: 0 0 16px rgba(0, 122, 255, 0.85) !important;
+    }
+
+    .send-arrow-btn.is-green.send-pulse {
+      box-shadow: 0 0 16px rgba(52, 199, 89, 0.85) !important;
+    }
+
+    .home-indicator-wrap {
+      margin-top: 9px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .home-indicator {
+      width: 126px;
+      height: 4px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Dark VHS Overlay */
+    .vhs-overlay {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.035) 0px,
+        rgba(255, 255, 255, 0.035) 1px,
+        rgba(0, 0, 0, 0.22) 2px,
+        rgba(0, 0, 0, 0.22) 4px
+      );
+      mix-blend-mode: screen;
+    }
+
+    .vhs-active .vhs-overlay {
+      opacity: 1;
+    }
+
+    .vhs-active.phone-screen {
+      filter: contrast(1.1) saturate(1.15);
+    }
+
+    .vhs-tracking-bar {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 26px;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.06) 45%,
+        rgba(120, 220, 255, 0.09) 50%,
+        rgba(255, 255, 255, 0.05) 55%,
+        transparent 100%
+      );
+      animation: vhsScanline 6.5s linear infinite;
+      z-index: 31;
+      pointer-events: none;
+    }
+
+    .vhs-active .vhs-tracking-bar {
+      display: block;
+    }
+
+    @keyframes vhsScanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(760px); }
+    }
+
+    .vhs-hud {
+      position: absolute;
+      top: 46px;
+      left: 16px;
+      z-index: 32;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.68);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      color: #fb7185;
+    }
+
+    .vhs-hud.hidden {
+      display: none;
+    }
+
+    .rec-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 9999px;
+      background: #f43f5e;
+      animation: recPulse 1s infinite ease-in-out;
+    }
+
+    @keyframes recPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    /* Toast Notice */
+    .toast-box {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 60;
+      max-width: 360px;
+      background: #18181c;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 14px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #f4f4f5;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast-box.hidden {
+      display: none;
+    }
+
+    .helper-note {
+      font-size: 12px;
+      color: var(--text-dim);
+      text-align: center;
+      margin-top: 12px;
+      max-width: 360px;
+      line-height: 1.45;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Studio Header -->
+    <header class="studio-header">
+      <div class="studio-header-inner">
+        <div class="brand-wrap">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff">
+              <path d="M12 3C6.48 3 2 6.58 2 11c0 2.04.88 3.9 2.33 5.31-.23 1.46-.9 2.86-1.92 3.84a.5.5 0 0 0 .35.85c1.99 0 3.86-.74 5.25-1.8 1.24.36 2.58.56 3.99.56 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="brand-title">iMessage Video Studio</h1>
+            <p class="brand-sub">Multi-line expanding composer, beat-synced intervals &amp; 60fps audio-video export</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="previewAnimBtn" type="button" class="btn btn-secondary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#38bdf8">
+              <path d="M8 5.14v13.72a1 1 0 0 0 1.52.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/>
+            </svg>
+            <span id="previewBtnLabel">Play Preview</span>
+          </button>
+
+          <button id="downloadVideoBtn" type="button" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span id="downloadBtnLabel">Download Video</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Export / Recording Progress Banner -->
+      <div id="statusBanner" class="status-banner hidden">
+        <div class="status-banner-inner">
+          <div class="status-left">
+            <span class="rec-dot"></span>
+            <span id="statusText">Recording...</span>
+          </div>
+          <div class="status-right">
+            <div class="progress-track">
+              <div id="progressBarFill" class="progress-fill"></div>
+            </div>
+            <span id="progressPercent" style="font-family: monospace; font-size: 12px; color: #a1a1aa; min-width: 36px; text-align: right;">0%</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Studio Workspace -->
+    <main class="workspace">
+      <!-- Left Column: Controls -->
+      <section class="editor-col">
+        <!-- 1. Conversation & Appearance Settings -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Conversation &amp; Appearance</h2>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button id="presetMidnightBtn" type="button" class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;">Late Night Story</button>
+              <button id="presetLongWrapBtn" type="button" class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;">Long Multi-Line Test</button>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div>
+              <label for="contactNameInput" class="field-label">Contact Name</label>
+              <input id="contactNameInput" type="text" value="Maya Lin" maxlength="28" class="field-input" />
+            </div>
+
+            <div>
+              <label for="contactInitialsInput" class="field-label">Avatar Initials</label>
+              <input id="contactInitialsInput" type="text" value="ML" maxlength="2" class="field-input" style="text-transform: uppercase;" />
+            </div>
+
+            <div>
+              <label for="headerTimestampInput" class="field-label">Header Timestamp</label>
+              <input id="headerTimestampInput" type="text" value="iMessage • Today 11:42 PM" maxlength="34" class="field-input" />
+            </div>
+          </div>
+
+          <div class="controls-bar">
+            <label class="switch-wrap">
+              <input id="vhsToggleInput" type="checkbox" />
+              <span class="switch-pill"></span>
+              <div>
+                <div style="font-size: 13px; font-weight: 500;">Dark VHS Aesthetic</div>
+                <div style="font-size: 11px; color: var(--text-dim);">Scanlines, tracking bar &amp; REC timecode</div>
+              </div>
+            </label>
+
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div>
+                <label for="themeColorSelect" class="field-label" style="margin-bottom: 3px;">Bubble / Send Color</label>
+                <select id="themeColorSelect" class="field-select" style="padding: 6px 10px; font-size: 12px;">
+                  <option value="blue" selected>iMessage Blue (#007AFF)</option>
+                  <option value="green">SMS / Text Green (#34C759)</option>
+                </select>
+              </div>
+
+              <div>
+                <label for="typingSpeedSelect" class="field-label" style="margin-bottom: 3px;">Typing Speed</label>
+                <select id="typingSpeedSelect" class="field-select" style="padding: 6px 10px; font-size: 12px;">
+                  <option value="fast">Fast (22ms/char)</option>
+                  <option value="natural" selected>Natural (38ms/char)</option>
+                  <option value="slow">Dramatic (60ms/char)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Background Song & Beat-Sync Card -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Song / Audio Track &amp; Beat Sync</h2>
+              <p class="card-subtitle">Upload a song to mix directly into your exported video &amp; tap along to set exact message intervals.</p>
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button id="tapSyncBtn" type="button" class="btn btn-secondary" style="padding: 6px 11px; font-size: 12px;" title="Play song and tap Spacebar or this button to set custom intervals per message">
+                Tap to Sync Timings
+              </button>
+            </div>
+          </div>
+
+          <div class="audio-drop-row">
+            <div class="audio-meta">
+              <div class="audio-badge">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 18V5l12-2v13"/>
+                  <circle cx="6" cy="18" r="3"/>
+                  <circle cx="18" cy="16" r="3"/>
+                </svg>
+              </div>
+              <div style="min-width: 0;">
+                <div id="audioFileName" class="audio-filename">No song uploaded (optional)</div>
+                <div id="audioDurationLabel" class="audio-sub">Supports MP3, WAV, M4A, OGG • Mixed into exported video</div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <label for="audioFileInput" class="btn btn-secondary" style="padding: 7px 12px; font-size: 12px;">
+                Choose Song
+              </label>
+              <input id="audioFileInput" type="file" accept="audio/*" style="display: none;" />
+
+              <button id="audioPreviewToggleBtn" type="button" class="btn btn-secondary" style="padding: 7px 10px; font-size: 12px;" disabled>
+                Play Song
+              </button>
+              <button id="clearAudioBtn" type="button" class="icon-btn danger" title="Remove song" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <canvas id="waveformCanvas" class="waveform-canvas" width="600" height="44"></canvas>
+
+          <div class="audio-sliders">
+            <div class="range-group">
+              <div class="range-header">
+                <span>Song Start Offset</span>
+                <span id="songOffsetValue" style="font-family: monospace;">0.0s</span>
+              </div>
+              <input id="songOffsetSlider" type="range" min="0" max="60" step="0.5" value="0" disabled />
+            </div>
+
+            <div class="range-group">
+              <div class="range-header">
+                <span>Song Volume</span>
+                <span id="songVolumeValue" style="font-family: monospace;">85%</span>
+              </div>
+              <input id="songVolumeSlider" type="range" min="0" max="100" step="1" value="85" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Message Sequence & Custom Intervals -->
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Message Sequence &amp; Custom Intervals</h2>
+              <p class="card-subtitle">Set the exact pause interval (in seconds) before each message sends or types.</p>
+            </div>
+            <button id="addMessageRowBtn" type="button" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px; color: #60a5fa;">
+              + Add Message
+            </button>
+          </div>
+
+          <div id="messagesEditorList" class="messages-list">
+            <!-- Dynamic message rows -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Live iPhone Simulator -->
+      <section class="preview-col">
+        <div class="iphone-bezel">
+          <div id="phoneScreen" class="phone-screen">
+            <div class="vhs-overlay"></div>
+            <div class="vhs-tracking-bar"></div>
+
+            <!-- VHS REC Timecode HUD -->
+            <div id="vhsHud" class="vhs-hud hidden">
+              <span class="rec-dot"></span>
+              <span>VHS • SP</span>
+              <span id="vhsTimecode" style="color: #e4e4e7;">00:00:00</span>
+            </div>
+
+            <!-- iOS Top Bar -->
+            <div class="ios-top-bar">
+              <div class="ios-status-row">
+                <span>11:42</span>
+                <div class="dynamic-island">
+                  <span class="island-lens"></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="2" y="14" width="3" height="7" rx="1"/>
+                    <rect x="7" y="11" width="3" height="10" rx="1"/>
+                    <rect x="12" y="7" width="3" height="14" rx="1"/>
+                    <rect x="17" y="3" width="3" height="18" rx="1"/>
+                  </svg>
+                  <div style="width: 22px; height: 11px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.65); padding: 1.5px; display: flex;">
+                    <div style="width: 100%; height: 100%; background: #ffffff; border-radius: 1.5px;"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ios-nav-row">
+                <button id="replayHeaderBtn" type="button" class="ios-back-btn" title="Replay conversation">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"/>
+                  </svg>
+                </button>
+
+                <div class="ios-contact-center" onclick="document.getElementById('contactNameInput').focus()">
+                  <div class="ios-avatar">
+                    <span id="previewAvatarInitials">ML</span>
+                  </div>
+                  <div class="ios-contact-name-row">
+                    <span id="previewContactName" class="ios-contact-name">Maya Lin</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2.5">
+                      <polyline points="9 18 15 12 9 6"/>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Circular dark-gray FaceTime / video camera button -->
+                <button id="facetimeVideoBtn" type="button" class="facetime-circle-btn" aria-label="Video Call" title="Video Call">
+                  <svg width="23" height="18" viewBox="0 0 28 20" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="15.5" height="14" rx="3.5"/>
+                    <path d="M17.5 7.8l8-4.3v13l-8-4.3v-4.4z"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Scrollable Chat Thread -->
+            <div id="chatThread" class="chat-thread">
+              <div id="chatMessagesInner" class="chat-messages-inner">
+                <div class="chat-timestamp">
+                  <span id="previewHeaderLabel">iMessage • Today 11:42 PM</span>
+                </div>
+              </div>
+
+              <div id="typingIndicator" class="typing-wrap hidden">
+                <div class="typing-bubble">
+                  <span class="typing-dot"></span>
+                  <span class="typing-dot"></span>
+                  <span class="typing-dot"></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Multi-line Expanding Composer Bar (matches reference image) -->
+            <div class="ios-composer-bar">
+              <div class="composer-row">
+                <button type="button" class="plus-circle-btn" aria-label="Add attachment">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                  </svg>
+                </button>
+
+                <div class="input-pill-container">
+                  <textarea
+                    id="composerInput"
+                    rows="1"
+                    placeholder="iMessage"
+                    class="composer-textarea"
+                  ></textarea>
+
+                  <button id="sendButton" type="button" class="send-arrow-btn send-hidden" aria-label="Send message">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="19" x2="12" y2="5"/>
+                      <polyline points="5 12 12 5 19 12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="home-indicator-wrap">
+                <div class="home-indicator"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="helper-note">
+          Type a long message directly into the iMessage pill above to watch it wrap onto multiple lines and expand upward with the Send button pinned to the bottom-right.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <!-- Hidden HTML5 Audio Element for Playback & Web Audio API Mixing -->
+  <audio id="songAudioEl" crossorigin="anonymous" preload="auto"></audio>
+
+  <!-- Toast Notice -->
+  <div id="toastBox" class="toast-box hidden">
+    <span style="color: #38bdf8; font-size: 14px;">●</span>
+    <span id="toastMessage"></span>
+  </div>
+
+  <script>
+    /**
+     * iMessage Animated Chat Simulator & Video Exporter
+     * - Zero external dependencies; completely self-contained.
+     * - Multi-line expanding composer pill with bottom-aligned '+' and upward-arrow Send button
+     *   in both live DOM preview and 60fps HTML5 Canvas video export.
+     * - Per-message custom delay intervals + interactive Beat-Tap Sync with uploaded audio.
+     * - Web Audio API + MediaRecorder mixing song audio directly into the exported video file.
+     */
+    (function () {
+      const STORAGE_KEY = 'imessage_video_studio_v2';
+
+      const PRESETS = {
+        midnight: [
+          { id: uid(), sender: 'them', text: 'Are you still awake? Just finished editing the clip.', delay: 0.7 },
+          { id: uid(), sender: 'me', text: 'Yeah I am! Send it over, let me see how the dark grade looks.', delay: 0.8 },
+          { id: uid(), sender: 'them', text: 'Added subtle VHS scanlines and kept the bubbles super clean.', delay: 0.9 },
+          { id: uid(), sender: 'me', text: 'That looks straight out of a late-night film.', delay: 0.7 }
+        ],
+        longWrap: [
+          { id: uid(), sender: 'them', text: 'Show me how the input box handles longer multi-line messages before sending.', delay: 0.6 },
+          { id: uid(), sender: 'me', text: 'hello this is just a test to prove how the message goes down onto multiple lines smoothly while keeping the send button anchored at the bottom right', delay: 0.9 },
+          { id: uid(), sender: 'them', text: 'Clean! The rounded pill expanded upward without cutting anything off.', delay: 0.8 }
+        ]
+      };
+
+      const SPEED_MAP = {
+        fast: 22,
+        natural: 38,
+        slow: 60
+      };
+
+      const state = {
+        contactName: 'Maya Lin',
+        contactInitials: 'ML',
+        headerLabel: 'iMessage • Today 11:42 PM',
+        vhsEnabled: false,
+        themeColor: 'blue', // 'blue' (#007AFF) | 'green' (#34C759)
+        typingSpeed: 'natural',
+        messages: PRESETS.midnight.map((m) => ({ ...m })),
+        // Audio state (kept in memory; only lightweight metadata saved in localStorage)
+        audioUrl: null,
+        audioFileName: '',
+        audioDuration: 0,
+        songOffset: 0,
+        songVolume: 0.85,
+        waveformPeaks: [],
+        // Playback / Export / Tap-Sync flags
+        isPlaying: false,
+        isExporting: false,
+        isTapSyncing: false,
+        tapSyncIndex: 0,
+        tapLastTimestamp: 0,
+        cancelToken: 0
+      };
+
+      // Web Audio API nodes (initialized on user gesture)
+      let audioCtx = null;
+      let audioSourceNode = null;
+      let audioGainNode = null;
+      let audioDestNode = null;
+
+      const els = {
+        contactNameInput: document.getElementById('contactNameInput'),
+        contactInitialsInput: document.getElementById('contactInitialsInput'),
+        headerTimestampInput: document.getElementById('headerTimestampInput'),
+        vhsToggleInput: document.getElementById('vhsToggleInput'),
+        themeColorSelect: document.getElementById('themeColorSelect'),
+        typingSpeedSelect: document.getElementById('typingSpeedSelect'),
+        presetMidnightBtn: document.getElementById('presetMidnightBtn'),
+        presetLongWrapBtn: document.getElementById('presetLongWrapBtn'),
+        // Audio controls
+        audioFileInput: document.getElementById('audioFileInput'),
+        audioFileName: document.getElementById('audioFileName'),
+        audioDurationLabel: document.getElementById('audioDurationLabel'),
+        audioPreviewToggleBtn: document.getElementById('audioPreviewToggleBtn'),
+        clearAudioBtn: document.getElementById('clearAudioBtn'),
+        waveformCanvas: document.getElementById('waveformCanvas'),
+        songOffsetSlider: document.getElementById('songOffsetSlider'),
+        songOffsetValue: document.getElementById('songOffsetValue'),
+        songVolumeSlider: document.getElementById('songVolumeSlider'),
+        songVolumeValue: document.getElementById('songVolumeValue'),
+        tapSyncBtn: document.getElementById('tapSyncBtn'),
+        songAudioEl: document.getElementById('songAudioEl'),
+        // Sequence editor
+        addMessageRowBtn: document.getElementById('addMessageRowBtn'),
+        messagesEditorList: document.getElementById('messagesEditorList'),
+        // Preview screen
+        phoneScreen: document.getElementById('phoneScreen'),
+        vhsHud: document.getElementById('vhsHud'),
+        vhsTimecode: document.getElementById('vhsTimecode'),
+        previewAvatarInitials: document.getElementById('previewAvatarInitials'),
+        previewContactName: document.getElementById('previewContactName'),
+        previewHeaderLabel: document.getElementById('previewHeaderLabel'),
+        chatThread: document.getElementById('chatThread'),
+        chatMessagesInner: document.getElementById('chatMessagesInner'),
+        typingIndicator: document.getElementById('typingIndicator'),
+        composerInput: document.getElementById('composerInput'),
+        sendButton: document.getElementById('sendButton'),
+        facetimeVideoBtn: document.getElementById('facetimeVideoBtn'),
+        replayHeaderBtn: document.getElementById('replayHeaderBtn'),
+        previewAnimBtn: document.getElementById('previewAnimBtn'),
+        previewBtnLabel: document.getElementById('previewBtnLabel'),
+        downloadVideoBtn: document.getElementById('downloadVideoBtn'),
+        downloadBtnLabel: document.getElementById('downloadBtnLabel'),
+        statusBanner: document.getElementById('statusBanner'),
+        statusText: document.getElementById('statusText'),
+        progressBarFill: document.getElementById('progressBarFill'),
+        progressPercent: document.getElementById('progressPercent'),
+        toastBox: document.getElementById('toastBox'),
+        toastMessage: document.getElementById('toastMessage')
+      };
+
+      function uid() {
+        return 'msg_' + Math.random().toString(36).slice(2, 9);
+      }
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)));
+      }
+
+      function showToast(msg) {
+        els.toastMessage.textContent = msg;
+        els.toastBox.classList.remove('hidden');
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => {
+          els.toastBox.classList.add('hidden');
+        }, 3400);
+      }
+
+      function getAccentHex() {
+        return state.themeColor === 'green' ? '#34c759' : '#007aff';
+      }
+
+      function saveState() {
+        try {
+          const safePayload = {
+            contactName: state.contactName,
+            contactInitials: state.contactInitials,
+            headerLabel: state.headerLabel,
+            vhsEnabled: state.vhsEnabled,
+            themeColor: state.themeColor,
+            typingSpeed: state.typingSpeed,
+            songOffset: state.songOffset,
+            songVolume: state.songVolume,
+            messages: state.messages.map((m) => ({
+              id: m.id,
+              sender: m.sender,
+              text: m.text,
+              delay: Number(m.delay) || 0.7
+            }))
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(safePayload));
+        } catch (err) {
+          // Safely ignore storage quota errors
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          const parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object') return;
+
+          if (typeof parsed.contactName === 'string') state.contactName = parsed.contactName;
+          if (typeof parsed.contactInitials === 'string') state.contactInitials = parsed.contactInitials;
+          if (typeof parsed.headerLabel === 'string') state.headerLabel = parsed.headerLabel;
+          if (typeof parsed.vhsEnabled === 'boolean') state.vhsEnabled = parsed.vhsEnabled;
+          if (parsed.themeColor === 'green' || parsed.themeColor === 'blue') state.themeColor = parsed.themeColor;
+          if (SPEED_MAP[parsed.typingSpeed]) state.typingSpeed = parsed.typingSpeed;
+          if (typeof parsed.songOffset === 'number' && !Number.isNaN(parsed.songOffset)) state.songOffset = parsed.songOffset;
+          if (typeof parsed.songVolume === 'number' && !Number.isNaN(parsed.songVolume)) state.songVolume = parsed.songVolume;
+
+          if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
+            state.messages = parsed.messages.map((m) => ({
+              id: typeof m.id === 'string' ? m.id : uid(),
+              sender: m.sender === 'me' ? 'me' : 'them',
+              text: typeof m.text === 'string' ? m.text : '',
+              delay: typeof m.delay === 'number' && m.delay >= 0 ? m.delay : 0.7
+            }));
+          }
+        } catch (err) {
+          // Ignore malformed localStorage
+        }
+      }
+
+      function syncControlsFromState() {
+        els.contactNameInput.value = state.contactName;
+        els.contactInitialsInput.value = state.contactInitials;
+        els.headerTimestampInput.value = state.headerLabel;
+        els.vhsToggleInput.checked = state.vhsEnabled;
+        els.themeColorSelect.value = state.themeColor;
+        els.typingSpeedSelect.value = state.typingSpeed;
+        els.songVolumeSlider.value = Math.round(state.songVolume * 100);
+        els.songVolumeValue.textContent = `${Math.round(state.songVolume * 100)}%`;
+        els.songAudioEl.volume = state.songVolume;
+      }
+
+      function applyThemeAndHeader() {
+        const accent = getAccentHex();
+        document.documentElement.style.setProperty('--accent', accent);
+
+        if (state.themeColor === 'green') {
+          els.sendButton.classList.add('is-green');
+        } else {
+          els.sendButton.classList.remove('is-green');
+        }
+
+        els.previewContactName.textContent = state.contactName.trim() || 'Contact';
+        const initials = (state.contactInitials.trim() || state.contactName.trim().slice(0, 2) || 'IM').toUpperCase();
+        els.previewAvatarInitials.textContent = initials;
+        els.previewHeaderLabel.textContent = state.headerLabel.trim() || 'iMessage';
+        els.composerInput.placeholder = state.themeColor === 'green' ? 'Text Message' : 'iMessage';
+
+        if (state.vhsEnabled) {
+          els.phoneScreen.classList.add('vhs-active');
+          els.vhsHud.classList.remove('hidden');
+        } else {
+          els.phoneScreen.classList.remove('vhs-active');
+          els.vhsHud.classList.add('hidden');
+        }
+      }
+
+      function updateStatusBanner(visible, text = '', percent = 0) {
+        if (!visible) {
+          els.statusBanner.classList.add('hidden');
+          return;
+        }
+        els.statusBanner.classList.remove('hidden');
+        els.statusText.textContent = text;
+        const pct = Math.max(0, Math.min(100, Math.round(percent)));
+        els.progressBarFill.style.width = pct + '%';
+        els.progressPercent.textContent = pct + '%';
+      }
+
+      /**
+       * Auto-sizes the multi-line composer textarea upward as lines wrap,
+       * keeping the chat scroll pinned to the bottom and toggling Send button visibility.
+       */
+      function autoResizeComposer(forceSendVisible = false) {
+        const ta = els.composerInput;
+        ta.style.height = '26px';
+        const nextHeight = Math.min(112, Math.max(26, ta.scrollHeight));
+        ta.style.height = nextHeight + 'px';
+
+        const hasText = ta.value.trim().length > 0 || forceSendVisible;
+        if (hasText) {
+          els.sendButton.classList.remove('send-hidden');
+          els.sendButton.classList.add('send-visible');
+        } else {
+          els.sendButton.classList.remove('send-visible');
+          els.sendButton.classList.add('send-hidden');
+        }
+
+        // Keep chat thread scrolled cleanly as composer expands vertically
+        els.chatThread.scrollTop = els.chatThread.scrollHeight;
+      }
+
+      /**
+       * Renders the editable message rows with per-message interval delay controls.
+       */
+      function renderEditorList() {
+        els.messagesEditorList.innerHTML = '';
+
+        state.messages.forEach((msg, index) => {
+          const row = document.createElement('div');
+          row.className = 'msg-row';
+          row.dataset.index = String(index);
+
+          const isMe = msg.sender === 'me';
+          const senderBtn = document.createElement('button');
+          senderBtn.type = 'button';
+          senderBtn.className = `sender-pill ${isMe ? 'is-me' : 'is-them'} ${isMe && state.themeColor === 'green' ? 'is-sms' : ''}`;
+          senderBtn.textContent = isMe ? 'Sent (Me)' : 'Received';
+          senderBtn.title = 'Click to switch sender';
+          senderBtn.addEventListener('click', () => {
+            msg.sender = msg.sender === 'me' ? 'them' : 'me';
+            saveState();
+            renderEditorList();
+          });
+
+          const textArea = document.createElement('textarea');
+          textArea.rows = 1;
+          textArea.value = msg.text;
+          textArea.placeholder = 'Type message text (supports multi-line wrapping)...';
+          textArea.className = 'msg-text-area';
+          textArea.addEventListener('input', (e) => {
+            msg.text = e.target.value;
+            saveState();
+          });
+
+          const delayBox = document.createElement('div');
+          delayBox.className = 'delay-box';
+          delayBox.title = 'Pause interval (seconds) before this message starts';
+
+          const delayPrefix = document.createElement('span');
+          delayPrefix.textContent = 'Wait';
+
+          const delayInput = document.createElement('input');
+          delayInput.type = 'number';
+          delayInput.min = '0';
+          delayInput.max = '30';
+          delayInput.step = '0.1';
+          delayInput.value = Number(msg.delay ?? 0.7).toFixed(1);
+          delayInput.className = 'delay-input';
+          delayInput.addEventListener('change', (e) => {
+            const val = parseFloat(e.target.value);
+            msg.delay = Number.isFinite(val) && val >= 0 ? Math.min(30, val) : 0.5;
+            e.target.value = msg.delay.toFixed(1);
+            saveState();
+          });
+
+          const delaySuffix = document.createElement('span');
+          delaySuffix.textContent = 's';
+
+          delayBox.appendChild(delayPrefix);
+          delayBox.appendChild(delayInput);
+          delayBox.appendChild(delaySuffix);
+
+          const upBtn = document.createElement('button');
+          upBtn.type = 'button';
+          upBtn.className = 'icon-btn';
+          upBtn.title = 'Move up';
+          upBtn.disabled = index === 0;
+          upBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="18 15 12 9 6 15"/></svg>';
+          upBtn.addEventListener('click', () => {
+            if (index > 0) {
+              const tmp = state.messages[index - 1];
+              state.messages[index - 1] = state.messages[index];
+              state.messages[index] = tmp;
+              saveState();
+              renderEditorList();
+            }
+          });
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'icon-btn danger';
+          delBtn.title = 'Delete message';
+          delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+          delBtn.addEventListener('click', () => {
+            if (state.messages.length <= 1) {
+              showToast('Keep at least one message in the conversation.');
+              return;
+            }
+            state.messages.splice(index, 1);
+            saveState();
+            renderEditorList();
+          });
+
+          row.appendChild(senderBtn);
+          row.appendChild(textArea);
+          row.appendChild(delayBox);
+          row.appendChild(upBtn);
+          row.appendChild(delBtn);
+          els.messagesEditorList.appendChild(row);
+        });
+      }
+
+      /**
+       * Web Audio API setup so uploaded song plays cleanly and routes into MediaRecorder.
+       */
+      function ensureWebAudioGraph() {
+        if (!audioCtx) {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return null;
+          audioCtx = new AudioContextClass();
+          audioSourceNode = audioCtx.createMediaElementSource(els.songAudioEl);
+          audioGainNode = audioCtx.createGain();
+          audioDestNode = audioCtx.createMediaStreamDestination();
+
+          audioSourceNode.connect(audioGainNode);
+          audioGainNode.connect(audioCtx.destination);
+          audioGainNode.connect(audioDestNode);
+        }
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        if (audioGainNode) {
+          audioGainNode.gain.value = state.songVolume;
+        }
+        return audioDestNode;
+      }
+
+      async function startSongPlayback() {
+        if (!state.audioUrl) return;
+        ensureWebAudioGraph();
+        try {
+          els.songAudioEl.pause();
+          const maxStart = Math.max(0, (state.audioDuration || 0) - 0.5);
+          els.songAudioEl.currentTime = Math.min(state.songOffset, maxStart);
+          els.songAudioEl.volume = state.songVolume;
+          await els.songAudioEl.play();
+          els.audioPreviewToggleBtn.textContent = 'Stop Song';
+        } catch (err) {
+          // Ignore autoplay restriction if triggered outside gesture
+        }
+      }
+
+      function stopSongPlayback() {
+        els.songAudioEl.pause();
+        els.audioPreviewToggleBtn.textContent = 'Play Song';
+      }
+
+      /**
+       * Draws a visual waveform preview for the uploaded audio track & highlights start offset.
+       */
+      function drawWaveform() {
+        const canvas = els.waveformCanvas;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.fillStyle = '#0c0c0f';
+        ctx.fillRect(0, 0, w, h);
+
+        if (!state.waveformPeaks.length) {
+          ctx.fillStyle = '#52525b';
+          ctx.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('Upload a song to preview waveform & sync message timings', w / 2, h / 2);
+          return;
+        }
+
+        const peaks = state.waveformPeaks;
+        const barW = Math.max(2, w / peaks.length - 1);
+        const offsetRatio = state.audioDuration > 0 ? state.songOffset / state.audioDuration : 0;
+        const offsetX = offsetRatio * w;
+
+        peaks.forEach((amp, i) => {
+          const x = (i / peaks.length) * w;
+          const barH = Math.max(4, amp * (h - 10));
+          const y = (h - barH) / 2;
+          ctx.fillStyle = x >= offsetX ? getAccentHex() : '#3f3f46';
+          ctx.fillRect(x, y, barW, barH);
+        });
+
+        // Start offset marker line
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(offsetX, 0);
+        ctx.lineTo(offsetX, h);
+        ctx.stroke();
+      }
+
+      async function analyzeAudioWaveform(file) {
+        try {
+          const arrayBuf = await file.arrayBuffer();
+          const TempCtx = window.AudioContext || window.webkitAudioContext;
+          if (!TempCtx) return;
+          const tempCtx = new TempCtx();
+          const decoded = await tempCtx.decodeAudioData(arrayBuf);
+          const channel = decoded.getChannelData(0);
+          const buckets = 120;
+          const blockSize = Math.floor(channel.length / buckets) || 1;
+          const peaks = [];
+          for (let i = 0; i < buckets; i++) {
+            let max = 0;
+            const start = i * blockSize;
+            for (let j = 0; j < blockSize && start + j < channel.length; j++) {
+              const v = Math.abs(channel[start + j]);
+              if (v > max) max = v;
+            }
+            peaks.push(max);
+          }
+          state.waveformPeaks = peaks;
+          state.audioDuration = decoded.duration || 0;
+          els.songOffsetSlider.max = String(Math.max(0, Math.floor(state.audioDuration * 2) / 2));
+          els.songOffsetSlider.disabled = false;
+          drawWaveform();
+          tempCtx.close().catch(() => {});
+        } catch (err) {
+          state.waveformPeaks = [];
+          drawWaveform();
+        }
+      }
+
+      /**
+       * Beat-Tap Sync Mode: plays the song and lets the user tap a button or Spacebar
+       * to record exact custom intervals (`msg.delay`) for each message in real time.
+       */
+      function toggleTapSyncMode() {
+        if (state.isExporting) return;
+
+        if (state.isTapSyncing) {
+          finishTapSync();
+          return;
+        }
+
+        if (!state.messages.length) return;
+
+        state.cancelToken += 1;
+        state.isPlaying = false;
+        state.isTapSyncing = true;
+        state.tapSyncIndex = 0;
+        state.tapLastTimestamp = performance.now();
+
+        els.tapSyncBtn.classList.add('btn-sync-active');
+        els.tapSyncBtn.textContent = `Tap Beat for Msg 1/${state.messages.length} (or Space)`;
+        highlightSyncRow(0);
+        clearChatBubbles();
+
+        if (state.audioUrl) {
+          startSongPlayback();
+        }
+        showToast('Tap "Tap Beat" or press Spacebar on each beat to set message intervals!');
+      }
+
+      function recordTapBeat() {
+        if (!state.isTapSyncing) return;
+        const now = performance.now();
+        const elapsedSec = Math.max(0.1, Number(((now - state.tapLastTimestamp) / 1000).toFixed(1)));
+        state.tapLastTimestamp = now;
+
+        const idx = state.tapSyncIndex;
+        if (idx < state.messages.length) {
+          state.messages[idx].delay = elapsedSec;
+          const msg = state.messages[idx];
+          const next = state.messages[idx + 1];
+          const isLast = !next || next.sender !== msg.sender;
+          if (msg.text.trim()) {
+            appendBubble(msg.sender, msg.text.trim(), isLast);
+          }
+        }
+
+        state.tapSyncIndex += 1;
+        if (state.tapSyncIndex >= state.messages.length) {
+          finishTapSync();
+          showToast('Beat-synced intervals saved to every message!');
+        } else {
+          els.tapSyncBtn.textContent = `Tap Beat for Msg ${state.tapSyncIndex + 1}/${state.messages.length} (or Space)`;
+          highlightSyncRow(state.tapSyncIndex);
+        }
+      }
+
+      function finishTapSync() {
+        state.isTapSyncing = false;
+        els.tapSyncBtn.classList.remove('btn-sync-active');
+        els.tapSyncBtn.textContent = 'Tap to Sync Timings';
+        highlightSyncRow(-1);
+        stopSongPlayback();
+        saveState();
+        renderEditorList();
+      }
+
+      function highlightSyncRow(activeIdx) {
+        const rows = els.messagesEditorList.querySelectorAll('.msg-row');
+        rows.forEach((r, idx) => {
+          if (idx === activeIdx) {
+            r.classList.add('is-sync-highlight');
+            r.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+          } else {
+            r.classList.remove('is-sync-highlight');
+          }
+        });
+      }
+
+      function clearChatBubbles() {
+        const headerEl = els.previewHeaderLabel.parentElement;
+        els.chatMessagesInner.innerHTML = '';
+        if (headerEl) {
+          els.chatMessagesInner.appendChild(headerEl);
+        }
+        els.typingIndicator.classList.add('hidden');
+        els.composerInput.value = '';
+        autoResizeComposer(false);
+      }
+
+      function appendBubble(sender, text, isLastInGroup = true) {
+        const isMe = sender === 'me';
+        const row = document.createElement('div');
+        row.className = `bubble-row ${isMe ? 'me' : 'them'}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${isMe ? 'me' : 'them'} ${isLastInGroup ? '' : 'not-tail'}`;
+        bubble.textContent = text;
+
+        row.appendChild(bubble);
+        els.chatMessagesInner.appendChild(row);
+
+        requestAnimationFrame(() => {
+          els.chatThread.scrollTo({
+            top: els.chatThread.scrollHeight,
+            behavior: 'smooth'
+          });
+        });
+      }
+
+      /**
+       * Plays through the entire message list using each message's custom `delay` interval,
+       * realistic multi-line character typing in the expanding input pill, Send button pop-up & press,
+       * and smooth bottom-up chat scrolling.
+       */
+      async function runConversationSequence(token, onProgress = null) {
+        clearChatBubbles();
+        const validMessages = state.messages.filter((m) => m.text.trim().length > 0);
+        const total = Math.max(1, validMessages.length);
+        const charDelayBase = SPEED_MAP[state.typingSpeed] || 38;
+
+        const vhsStart = performance.now();
+        const vhsInterval = setInterval(() => {
+          const elapsed = Math.floor((performance.now() - vhsStart) / 1000);
+          const mins = String(Math.floor(elapsed / 60)).padStart(2, '0');
+          const secs = String(elapsed % 60).padStart(2, '0');
+          els.vhsTimecode.textContent = `00:${mins}:${secs}`;
+        }, 250);
+
+        try {
+          for (let i = 0; i < validMessages.length; i++) {
+            if (state.cancelToken !== token) return false;
+
+            const msg = validMessages[i];
+            const nextMsg = validMessages[i + 1];
+            const isLastInGroup = !nextMsg || nextMsg.sender !== msg.sender;
+            const customWaitMs = Math.max(0, (Number(msg.delay) || 0.6) * 1000);
+
+            if (customWaitMs > 0) {
+              await sleep(customWaitMs);
+              if (state.cancelToken !== token) return false;
+            }
+
+            if (msg.sender === 'me') {
+              els.composerInput.value = '';
+              autoResizeComposer(false);
+
+              const fullText = msg.text.trim();
+              const stepDelay = Math.max(16, Math.min(charDelayBase, 1800 / Math.max(1, fullText.length)));
+
+              for (let c = 1; c <= fullText.length; c++) {
+                if (state.cancelToken !== token) return false;
+                els.composerInput.value = fullText.slice(0, c);
+                autoResizeComposer(true);
+                await sleep(stepDelay);
+              }
+
+              // Hold expanded multi-line pill and popped-up Send button visibly before pressing
+              autoResizeComposer(true);
+              await sleep(340);
+              if (state.cancelToken !== token) return false;
+
+              els.sendButton.classList.add('send-pulse');
+              await sleep(200);
+              els.sendButton.classList.remove('send-pulse');
+              await sleep(100);
+
+              els.composerInput.value = '';
+              autoResizeComposer(false);
+
+              appendBubble('me', fullText, isLastInGroup);
+              await sleep(260);
+            } else {
+              els.typingIndicator.classList.remove('hidden');
+              requestAnimationFrame(() => {
+                els.chatThread.scrollTop = els.chatThread.scrollHeight;
+              });
+
+              const typingMs = Math.min(1800, Math.max(550, msg.text.length * (charDelayBase * 0.7)));
+              await sleep(typingMs);
+              if (state.cancelToken !== token) return false;
+
+              els.typingIndicator.classList.add('hidden');
+              appendBubble('them', msg.text.trim(), isLastInGroup);
+              await sleep(260);
+            }
+
+            if (typeof onProgress === 'function') {
+              onProgress(((i + 1) / total) * 100);
+            }
+          }
+
+          await sleep(500);
+          return state.cancelToken === token;
+        } finally {
+          clearInterval(vhsInterval);
+        }
+      }
+
+      /**
+       * Renders a 1:1 high-resolution frame of the simulator onto an offscreen canvas,
+       * including multi-line wrapped input bar expansion, bottom-pinned '+' and Send buttons,
+       * circular video camera header icon, message bubbles, and optional VHS scanlines.
+       */
+      function renderSimulatorToCanvas(ctx, width, height, elapsedSec) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
+
+        const accent = getAccentHex();
+        const padX = Math.round(width * 0.052);
+        const topBarH = Math.round(height * 0.13);
+
+        // 1. Pre-calculate multi-line composer pill height so chat area dynamically shifts upward!
+        const hasComposerText = els.composerInput.value.trim().length > 0;
+        const isSendPoppedUp = hasComposerText || els.sendButton.classList.contains('send-visible');
+
+        const plusR = Math.round(width * 0.044);
+        const plusCenterX = padX + plusR;
+        const pillLeft = plusCenterX + plusR + 14;
+        const pillRight = width - padX;
+        const pillW = pillRight - pillLeft;
+
+        const sendR = Math.round(width * 0.038);
+        const sendCenterX = pillRight - sendR - 8;
+
+        const compFontSize = Math.round(width * 0.039);
+        const compLineH = Math.round(compFontSize * 1.32);
+        ctx.font = `400 ${compFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+
+        const textWrapMaxW = pillW - 26 - (isSendPoppedUp ? (sendR * 2 + 14) : 12);
+        const composerLines = hasComposerText
+          ? wrapCanvasText(ctx, els.composerInput.value, Math.max(80, textWrapMaxW))
+          : [state.themeColor === 'green' ? 'Text Message' : 'iMessage'];
+
+        const visibleCompLines = composerLines.slice(-5); // Up to 5 visible lines just like iOS
+        const pillInnerH = Math.max(sendR * 2 + 12, visibleCompLines.length * compLineH + 18);
+        const bottomBarH = pillInnerH + Math.round(height * 0.046);
+        const compBarTop = height - bottomBarH;
+
+        // 2. Top Navigation Bar
+        ctx.fillStyle = '#121214';
+        ctx.fillRect(0, 0, width, topBarH);
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, topBarH);
+        ctx.lineTo(width, topBarH);
+        ctx.stroke();
+
+        // Back chevron on left
+        ctx.strokeStyle = '#0a84ff';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const backX = padX + 8;
+        const backY = Math.round(topBarH * 0.62);
+        ctx.beginPath();
+        ctx.moveTo(backX + 10, backY - 12);
+        ctx.lineTo(backX - 4, backY);
+        ctx.lineTo(backX + 10, backY + 12);
+        ctx.stroke();
+
+        // Avatar + Contact Name
+        const avatarR = Math.round(width * 0.045);
+        const avatarX = Math.round(width * 0.5);
+        const avatarY = Math.round(topBarH * 0.52);
+
+        ctx.fillStyle = '#27272a';
+        ctx.beginPath();
+        ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `600 ${Math.round(avatarR * 0.85)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(els.previewAvatarInitials.textContent || 'ML', avatarX, avatarY + 1);
+
+        ctx.fillStyle = '#f4f4f5';
+        ctx.font = `500 ${Math.round(width * 0.032)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.fillText(els.previewContactName.textContent || 'Maya Lin', avatarX, avatarY + avatarR + 16);
+
+        // Circular Dark-Gray Video Camera Button on Top-Right
+        const camBtnR = Math.round(width * 0.055);
+        const camBtnX = width - padX - camBtnR;
+        const camBtnY = Math.round(topBarH * 0.62);
+
+        ctx.fillStyle = '#212124';
+        ctx.beginPath();
+        ctx.arc(camBtnX, camBtnY, camBtnR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3.6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const boxW = camBtnR * 0.96;
+        const boxH = camBtnR * 0.68;
+        const boxX = camBtnX - boxW * 0.64;
+        const boxY = camBtnY - boxH * 0.5;
+        roundRectPath(ctx, boxX, boxY, boxW, boxH, 7);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(boxX + boxW, camBtnY - boxH * 0.24);
+        ctx.lineTo(boxX + boxW + camBtnR * 0.42, camBtnY - boxH * 0.48);
+        ctx.lineTo(boxX + boxW + camBtnR * 0.42, camBtnY + boxH * 0.48);
+        ctx.lineTo(boxX + boxW, camBtnY + boxH * 0.24);
+        ctx.closePath();
+        ctx.stroke();
+
+        // 3. Chat Bubbles Area (dynamically bounded above expanding compBarTop)
+        const threadTop = topBarH + 16;
+        const threadBottom = compBarTop - 14;
+        const bubbleRows = Array.from(els.chatMessagesInner.querySelectorAll('.bubble-row'));
+        const fontSize = Math.round(width * 0.041);
+        const lineHeight = Math.round(fontSize * 1.35);
+        const maxBubbleW = Math.round(width * 0.72);
+
+        const items = bubbleRows.map((row) => {
+          const isMe = row.classList.contains('me');
+          const bubble = row.querySelector('.chat-bubble');
+          const text = bubble ? bubble.textContent : '';
+          ctx.font = `400 ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+          const lines = wrapCanvasText(ctx, text, maxBubbleW - 36);
+          const h = lines.length * lineHeight + 22;
+          const longestLine = lines.reduce((m, l) => Math.max(m, ctx.measureText(l).width), 0);
+          const w = Math.min(maxBubbleW, Math.max(68, Math.ceil(longestLine + 36)));
+          return { isMe, lines, h, w };
+        });
+
+        const typingExtraH = !els.typingIndicator.classList.contains('hidden') ? 56 : 0;
+        const totalStackH = items.reduce((sum, it) => sum + it.h + 12, 0) + typingExtraH;
+        let cursorY = Math.max(threadTop, threadBottom - totalStackH);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, topBarH + 1, width, Math.max(10, threadBottom - topBarH));
+        ctx.clip();
+
+        for (const it of items) {
+          const x = it.isMe ? width - padX - it.w : padX;
+          ctx.fillStyle = it.isMe ? accent : '#262629';
+          roundRectPath(ctx, x, cursorY, it.w, it.h, 22);
+          ctx.fill();
+
+          ctx.fillStyle = it.isMe ? '#ffffff' : '#f2f2f7';
+          ctx.font = `400 ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+
+          it.lines.forEach((line, idx) => {
+            ctx.fillText(line, x + 18, cursorY + 11 + idx * lineHeight);
+          });
+
+          cursorY += it.h + 12;
+        }
+
+        if (!els.typingIndicator.classList.contains('hidden')) {
+          const dotBubbleW = 84;
+          const dotBubbleH = 44;
+          ctx.fillStyle = '#262629';
+          roundRectPath(ctx, padX, cursorY, dotBubbleW, dotBubbleH, 20);
+          ctx.fill();
+
+          for (let d = 0; d < 3; d++) {
+            const bounce = Math.sin(elapsedSec * 7 + d * 1.1) * 4;
+            ctx.fillStyle = '#a1a1aa';
+            ctx.beginPath();
+            ctx.arc(padX + 22 + d * 20, cursorY + dotBubbleH / 2 + bounce, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+
+        // 4. Bottom Multi-Line Expanding Composer Bar
+        ctx.fillStyle = '#0e0e10';
+        ctx.fillRect(0, compBarTop, width, bottomBarH);
+        ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+        ctx.beginPath();
+        ctx.moveTo(0, compBarTop);
+        ctx.lineTo(width, compBarTop);
+        ctx.stroke();
+
+        const pillTop = compBarTop + 12;
+        const pillBottom = pillTop + pillInnerH;
+
+        // Bottom-left '+' circle button aligned with bottom of expanding pill
+        const plusCenterY = pillBottom - plusR - 2;
+        ctx.fillStyle = '#252528';
+        ctx.beginPath();
+        ctx.arc(plusCenterX, plusCenterY, plusR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#e4e4e7';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        const plusArm = plusR * 0.42;
+        ctx.beginPath();
+        ctx.moveTo(plusCenterX - plusArm, plusCenterY);
+        ctx.lineTo(plusCenterX + plusArm, plusCenterY);
+        ctx.moveTo(plusCenterX, plusCenterY - plusArm);
+        ctx.lineTo(plusCenterX, plusCenterY + plusArm);
+        ctx.stroke();
+
+        // Rounded-rectangle input pill (border-radius ~ 26px at 720p)
+        ctx.fillStyle = '#1c1c1e';
+        roundRectPath(ctx, pillLeft, pillTop, pillW, pillInnerH, 26);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Multi-line wrapped text inside pill
+        ctx.font = `400 ${compFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = hasComposerText ? '#ffffff' : '#71717a';
+
+        const textStartY = pillTop + (pillInnerH - visibleCompLines.length * compLineH) / 2;
+        visibleCompLines.forEach((line, idx) => {
+          ctx.fillText(line, pillLeft + 18, textStartY + idx * compLineH);
+        });
+
+        // Bottom-right Circular Upward-Arrow Send Button inside the pill
+        if (isSendPoppedUp) {
+          const isPulsing = els.sendButton.classList.contains('send-pulse');
+          const r = isPulsing ? sendR * 1.18 : sendR;
+          const sendCenterY = pillBottom - sendR - 6;
+
+          ctx.fillStyle = accent;
+          ctx.beginPath();
+          ctx.arc(sendCenterX, sendCenterY, r, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3.2;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(sendCenterX, sendCenterY + r * 0.45);
+          ctx.lineTo(sendCenterX, sendCenterY - r * 0.45);
+          ctx.moveTo(sendCenterX - r * 0.4, sendCenterY - r * 0.05);
+          ctx.lineTo(sendCenterX, sendCenterY - r * 0.45);
+          ctx.lineTo(sendCenterX + r * 0.4, sendCenterY - r * 0.05);
+          ctx.stroke();
+        }
+
+        // Home indicator bar
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        roundRectPath(ctx, width * 0.35, height - 16, width * 0.3, 6, 3);
+        ctx.fill();
+
+        // 5. Optional Dark VHS Scanlines & REC Stamp
+        if (state.vhsEnabled) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+          for (let y = 0; y < height; y += 6) {
+            ctx.fillRect(0, y, width, 2);
+          }
+
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+          roundRectPath(ctx, padX, topBarH + 14, 155, 30, 8);
+          ctx.fill();
+
+          ctx.fillStyle = '#fb7185';
+          ctx.beginPath();
+          ctx.arc(padX + 16, topBarH + 29, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#f4f4f5';
+          ctx.font = '600 13px monospace';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(`VHS ${els.vhsTimecode.textContent}`, padX + 28, topBarH + 30);
+        }
+      }
+
+      function roundRectPath(ctx, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
+      }
+
+      function wrapCanvasText(ctx, text, maxWidth) {
+        const paragraphs = String(text).split('\n');
+        const allLines = [];
+
+        for (const para of paragraphs) {
+          const words = para.split(/\s+/).filter(Boolean);
+          if (!words.length) {
+            allLines.push('');
+            continue;
+          }
+          let current = '';
+          for (const word of words) {
+            // Break long single words gracefully if they exceed maxWidth
+            if (ctx.measureText(word).width > maxWidth) {
+              if (current) {
+                allLines.push(current);
+                current = '';
+              }
+              let chunk = '';
+              for (const ch of word) {
+                if (ctx.measureText(chunk + ch).width <= maxWidth) {
+                  chunk += ch;
+                } else {
+                  if (chunk) allLines.push(chunk);
+                  chunk = ch;
+                }
+              }
+              current = chunk;
+            } else {
+              const candidate = current ? current + ' ' + word : word;
+              if (ctx.measureText(candidate).width <= maxWidth) {
+                current = candidate;
+              } else {
+                allLines.push(current);
+                current = word;
+              }
+            }
+          }
+          if (current) allLines.push(current);
+        }
+        return allLines.length ? allLines : [''];
+      }
+
+      function pickSupportedMimeType(hasAudio) {
+        if (typeof MediaRecorder === 'undefined') return '';
+        const candidates = hasAudio
+          ? [
+              'video/mp4;codecs=avc1,mp4a.40.2',
+              'video/mp4',
+              'video/webm;codecs=vp9,opus',
+              'video/webm;codecs=vp8,opus',
+              'video/webm'
+            ]
+          : [
+              'video/mp4',
+              'video/webm;codecs=vp9',
+              'video/webm;codecs=vp8',
+              'video/webm'
+            ];
+
+        for (const mime of candidates) {
+          if (MediaRecorder.isTypeSupported(mime)) return mime;
+        }
+        return '';
+      }
+
+      /**
+       * Exports 60fps video combining the canvas stream and the uploaded song audio stream.
+       */
+      async function handleDownloadVideo() {
+        if (state.isExporting) return;
+        if (state.isTapSyncing) finishTapSync();
+
+        if (typeof MediaRecorder === 'undefined') {
+          showToast('Video recording is not supported in this browser.');
+          return;
+        }
+
+        const hasSong = Boolean(state.audioUrl);
+        const mimeType = pickSupportedMimeType(hasSong);
+        if (!mimeType) {
+          showToast('No supported video codec found for MediaRecorder.');
+          return;
+        }
+
+        state.cancelToken += 1;
+        const token = state.cancelToken;
+        state.isExporting = true;
+        state.isPlaying = true;
+        els.downloadVideoBtn.disabled = true;
+        els.previewAnimBtn.disabled = true;
+        els.downloadBtnLabel.textContent = 'Recording 60fps...';
+        updateStatusBanner(true, hasSong ? 'Recording 60fps video + song audio...' : 'Recording 60fps animated video...', 2);
+
+        const width = 720;
+        const height = 1280;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        const videoStream = canvas.captureStream(60);
+        const combinedTracks = [...videoStream.getVideoTracks()];
+
+        if (hasSong) {
+          const dest = ensureWebAudioGraph();
+          if (dest && dest.stream) {
+            const audioTracks = dest.stream.getAudioTracks();
+            audioTracks.forEach((t) => combinedTracks.push(t));
+          }
+          await startSongPlayback();
+        }
+
+        const combinedStream = new MediaStream(combinedTracks);
+        const chunks = [];
+        let recorder;
+
+        try {
+          recorder = new MediaRecorder(combinedStream, {
+            mimeType,
+            videoBitsPerSecond: 6000000
+          });
+        } catch (err) {
+          stopSongPlayback();
+          state.isExporting = false;
+          state.isPlaying = false;
+          els.downloadVideoBtn.disabled = false;
+          els.previewAnimBtn.disabled = false;
+          els.downloadBtnLabel.textContent = 'Download Video';
+          updateStatusBanner(false);
+          showToast('Could not initialize MediaRecorder.');
+          return;
+        }
+
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            chunks.push(e.data);
+          }
+        };
+
+        let rafId = null;
+        const startTime = performance.now();
+
+        const drawFrame = () => {
+          if (!state.isExporting) return;
+          const elapsedSec = (performance.now() - startTime) / 1000;
+          renderSimulatorToCanvas(ctx, width, height, elapsedSec);
+          rafId = requestAnimationFrame(drawFrame);
+        };
+
+        recorder.start(100);
+        drawFrame();
+
+        try {
+          await runConversationSequence(token, (pct) => {
+            updateStatusBanner(true, hasSong ? 'Rendering 60fps video + song audio...' : 'Rendering 60fps messages & animations...', pct);
+          });
+        } finally {
+          if (rafId) cancelAnimationFrame(rafId);
+          renderSimulatorToCanvas(ctx, width, height, (performance.now() - startTime) / 1000);
+          stopSongPlayback();
+        }
+
+        const blob = await new Promise((resolve) => {
+          recorder.onstop = () => resolve(new Blob(chunks, { type: mimeType }));
+          recorder.stop();
+        });
+
+        videoStream.getTracks().forEach((t) => t.stop());
+
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const safeName = (state.contactName || 'imessage').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}-chat.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+        state.isExporting = false;
+        state.isPlaying = false;
+        els.downloadVideoBtn.disabled = false;
+        els.previewAnimBtn.disabled = false;
+        els.downloadBtnLabel.textContent = 'Download Video';
+        els.previewBtnLabel.textContent = 'Play Preview';
+        updateStatusBanner(true, `Exported ${safeName}-chat.${ext}`, 100);
+        showToast(`Downloaded ${ext.toUpperCase()} video${hasSong ? ' with song audio' : ''}!`);
+
+        setTimeout(() => {
+          if (!state.isExporting) updateStatusBanner(false);
+        }, 3200);
+      }
+
+      async function handleTogglePreview() {
+        if (state.isExporting) return;
+        if (state.isTapSyncing) finishTapSync();
+
+        state.cancelToken += 1;
+        const token = state.cancelToken;
+        state.isPlaying = true;
+        els.previewBtnLabel.textContent = 'Restart Preview';
+
+        if (state.audioUrl) {
+          startSongPlayback();
+        }
+
+        const completed = await runConversationSequence(token);
+
+        if (state.cancelToken === token) {
+          state.isPlaying = false;
+          els.previewBtnLabel.textContent = 'Play Preview';
+          if (completed) {
+            stopSongPlayback();
+          }
+        }
+      }
+
+      // Event Bindings
+      els.contactNameInput.addEventListener('input', (e) => {
+        state.contactName = e.target.value;
+        if (!state.contactInitials.trim()) {
+          els.contactInitialsInput.value = state.contactName.trim().slice(0, 2).toUpperCase();
+          state.contactInitials = els.contactInitialsInput.value;
+        }
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.contactInitialsInput.addEventListener('input', (e) => {
+        state.contactInitials = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.headerTimestampInput.addEventListener('input', (e) => {
+        state.headerLabel = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.vhsToggleInput.addEventListener('change', (e) => {
+        state.vhsEnabled = e.target.checked;
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.themeColorSelect.addEventListener('change', (e) => {
+        state.themeColor = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+        renderEditorList();
+        drawWaveform();
+      });
+
+      els.typingSpeedSelect.addEventListener('change', (e) => {
+        state.typingSpeed = e.target.value;
+        saveState();
+      });
+
+      els.presetMidnightBtn.addEventListener('click', () => {
+        state.messages = PRESETS.midnight.map((m) => ({ ...m, id: uid() }));
+        saveState();
+        renderEditorList();
+        handleTogglePreview();
+      });
+
+      els.presetLongWrapBtn.addEventListener('click', () => {
+        state.messages = PRESETS.longWrap.map((m) => ({ ...m, id: uid() }));
+        saveState();
+        renderEditorList();
+        handleTogglePreview();
+      });
+
+      els.addMessageRowBtn.addEventListener('click', () => {
+        const lastSender = state.messages.length ? state.messages[state.messages.length - 1].sender : 'them';
+        state.messages.push({
+          id: uid(),
+          sender: lastSender === 'me' ? 'them' : 'me',
+          text: '',
+          delay: 0.7
+        });
+        saveState();
+        renderEditorList();
+      });
+
+      // Song Upload & Controls
+      els.audioFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        if (state.audioUrl) {
+          URL.revokeObjectURL(state.audioUrl);
+        }
+
+        state.audioUrl = URL.createObjectURL(file);
+        state.audioFileName = file.name;
+        state.songOffset = 0;
+
+        els.songAudioEl.src = state.audioUrl;
+        els.audioFileName.textContent = file.name;
+        els.audioPreviewToggleBtn.disabled = false;
+        els.clearAudioBtn.disabled = false;
+        els.songOffsetSlider.value = '0';
+        els.songOffsetValue.textContent = '0.0s';
+
+        await analyzeAudioWaveform(file);
+        els.audioDurationLabel.textContent = `Loaded (${state.audioDuration.toFixed(1)}s) • Ready for beat-sync & video export`;
+        showToast(`Song loaded: ${file.name}`);
+      });
+
+      els.audioPreviewToggleBtn.addEventListener('click', () => {
+        if (!state.audioUrl) return;
+        if (els.songAudioEl.paused) {
+          startSongPlayback();
+        } else {
+          stopSongPlayback();
+        }
+      });
+
+      els.songAudioEl.addEventListener('ended', () => {
+        els.audioPreviewToggleBtn.textContent = 'Play Song';
+      });
+
+      els.clearAudioBtn.addEventListener('click', () => {
+        stopSongPlayback();
+        if (state.audioUrl) {
+          URL.revokeObjectURL(state.audioUrl);
+        }
+        state.audioUrl = null;
+        state.audioFileName = '';
+        state.audioDuration = 0;
+        state.waveformPeaks = [];
+        els.songAudioEl.removeAttribute('src');
+        els.audioFileInput.value = '';
+        els.audioFileName.textContent = 'No song uploaded (optional)';
+        els.audioDurationLabel.textContent = 'Supports MP3, WAV, M4A, OGG • Mixed into exported video';
+        els.audioPreviewToggleBtn.disabled = true;
+        els.clearAudioBtn.disabled = true;
+        els.songOffsetSlider.disabled = true;
+        drawWaveform();
+      });
+
+      els.songOffsetSlider.addEventListener('input', (e) => {
+        state.songOffset = parseFloat(e.target.value) || 0;
+        els.songOffsetValue.textContent = `${state.songOffset.toFixed(1)}s`;
+        saveState();
+        drawWaveform();
+      });
+
+      els.songVolumeSlider.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10) || 0;
+        state.songVolume = pct / 100;
+        els.songVolumeValue.textContent = `${pct}%`;
+        els.songAudioEl.volume = state.songVolume;
+        if (audioGainNode) {
+          audioGainNode.gain.value = state.songVolume;
+        }
+        saveState();
+      });
+
+      // Tap-to-sync timings button & Spacebar listener
+      els.tapSyncBtn.addEventListener('click', () => {
+        if (!state.isTapSyncing) {
+          toggleTapSyncMode();
+        } else {
+          recordTapBeat();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (state.isTapSyncing && e.code === 'Space') {
+          e.preventDefault();
+          recordTapBeat();
+        }
+      });
+
+      // Live multi-line composer interaction
+      els.composerInput.addEventListener('input', () => {
+        autoResizeComposer(false);
+      });
+
+      function sendManualComposerMessage() {
+        const text = els.composerInput.value.trim();
+        if (!text) return;
+
+        els.sendButton.classList.add('send-pulse');
+        setTimeout(() => els.sendButton.classList.remove('send-pulse'), 160);
+
+        state.messages.push({ id: uid(), sender: 'me', text, delay: 0.7 });
+        saveState();
+        renderEditorList();
+        appendBubble('me', text, true);
+        els.composerInput.value = '';
+        autoResizeComposer(false);
+      }
+
+      els.sendButton.addEventListener('click', sendManualComposerMessage);
+      els.composerInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendManualComposerMessage();
+        }
+      });
+
+      els.facetimeVideoBtn.addEventListener('click', () => {
+        showToast(`Starting video call with ${state.contactName || 'Contact'}...`);
+      });
+
+      els.replayHeaderBtn.addEventListener('click', handleTogglePreview);
+      els.previewAnimBtn.addEventListener('click', handleTogglePreview);
+      els.downloadVideoBtn.addEventListener('click', handleDownloadVideo);
+
+      // Initialize
+      loadState();
+      syncControlsFromState();
+      applyThemeAndHeader();
+      renderEditorList();
+      drawWaveform();
+      handleTogglePreview();
+    })();
+  </script>
+</body>
+</html>

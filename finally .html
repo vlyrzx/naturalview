@@ -1,0 +1,4451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>iMessage Animated Chat Video Studio</title>
+  <style>
+    :root {
+      --bg-page: #050507;
+      --bg-card: #111216;
+      --bg-card-alt: #16171d;
+      --bg-input: #1c1d24;
+      --border-subtle: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text-main: #f4f4f6;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --accent: #007aff;
+      --accent-green: #34c759;
+      --ios-bar: #121214;
+      --ios-pill: #1c1c1e;
+      --ios-gray-btn: #242426;
+      --ios-bubble-them: #262629;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font-family: inherit;
+      color: inherit;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(161, 161, 170, 0.25);
+      border-radius: 9999px;
+    }
+
+    /* Top Studio Bar */
+    .studio-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(11, 12, 16, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .studio-header-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 11px;
+      background: linear-gradient(135deg, #38bdf8, #007aff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 18px rgba(0, 122, 255, 0.32);
+      flex-shrink: 0;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: #ffffff;
+    }
+
+    .brand-sub {
+      margin: 1px 0 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 11px;
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.14s ease, background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, opacity 0.16s ease;
+      user-select: none;
+    }
+
+    .btn:active:not(:disabled) {
+      transform: scale(0.97);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      color: var(--text-main);
+      border-color: var(--border-subtle);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: #252730;
+      border-color: var(--border-strong);
+    }
+
+    .btn-primary {
+      background: #007aff;
+      color: #ffffff;
+      box-shadow: 0 6px 18px rgba(0, 122, 255, 0.3);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #1a88ff;
+    }
+
+    .btn-sync-active {
+      background: #e11d48 !important;
+      color: #ffffff !important;
+      border-color: #fb7185 !important;
+      box-shadow: 0 0 18px rgba(225, 29, 72, 0.5);
+    }
+
+    .btn-danger-outline {
+      background: rgba(244, 63, 94, 0.1);
+      color: #fda4af;
+      border-color: rgba(244, 63, 94, 0.28);
+    }
+
+    .btn-danger-outline:hover:not(:disabled) {
+      background: rgba(244, 63, 94, 0.2);
+      color: #ffffff;
+    }
+
+    .icon-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .icon-btn:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+
+    .icon-btn.danger:hover:not(:disabled) {
+      background: rgba(244, 63, 94, 0.16);
+      color: #fb7185;
+    }
+
+    .icon-btn:disabled {
+      opacity: 0.28;
+      cursor: not-allowed;
+    }
+
+    .icon-btn.drag-handle {
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .icon-btn.drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .msg-row.dragging {
+      opacity: 0.45;
+      border-style: dashed;
+    }
+
+    .msg-row.drag-over-top {
+      border-top: 2px solid #38bdf8;
+    }
+
+    .msg-row.drag-over-bottom {
+      border-bottom: 2px solid #38bdf8;
+    }
+
+    .msg-row.pause-row {
+      background: #13141b;
+      border-color: rgba(56, 189, 248, 0.22);
+    }
+
+    .pause-badge {
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(56, 189, 248, 0.14);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .msg-extra-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .mini-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .mini-input {
+      width: 52px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 2px 5px;
+      font-size: 11px;
+      color: #ffffff;
+      text-align: center;
+      outline: none;
+    }
+
+    .mini-input:focus {
+      border-color: #007aff;
+    }
+
+    /* Progress / Recording Banner */
+    .status-banner {
+      border-top: 1px solid var(--border-subtle);
+      background: #111218;
+    }
+
+    .status-banner.hidden {
+      display: none;
+    }
+
+    .status-banner-inner {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      font-size: 12.5px;
+    }
+
+    .progress-track {
+      width: 170px;
+      height: 7px;
+      border-radius: 9999px;
+      background: #24262f;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: #007aff;
+      border-radius: 9999px;
+      transition: width 0.15s ease;
+    }
+
+    /* Main Workspace Grid */
+    .workspace {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 20px 18px 40px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(340px, 420px);
+      gap: 24px;
+      align-items: start;
+    }
+
+    @media (max-width: 980px) {
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+      .preview-col {
+        order: -1;
+      }
+    }
+
+    .editor-col {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Cards & Form Controls */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 18px;
+      padding: 16px 18px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    }
+
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 12.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .card-subtitle {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: var(--text-dim);
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    @media (max-width: 640px) {
+      .grid-3,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .field-label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .field-input,
+    .field-select {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 11px;
+      padding: 8px 11px;
+      font-size: 13px;
+      color: #ffffff;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    .field-input:focus,
+    .field-select:focus {
+      border-color: #007aff;
+      box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.18);
+    }
+
+    .controls-bar {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    /* Toggle Switch */
+    .switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-wrap input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .switch-pill {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      border-radius: 9999px;
+      background: #2e303b;
+      transition: background-color 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .switch-pill::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      transition: transform 0.2s ease;
+    }
+
+    .switch-wrap input:checked + .switch-pill {
+      background: #007aff;
+    }
+
+    .switch-wrap input:checked + .switch-pill::after {
+      transform: translateX(18px);
+    }
+
+    /* Audio & Waveform Box */
+    .audio-drop-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border-subtle);
+      border-radius: 13px;
+      padding: 10px 12px;
+    }
+
+    .audio-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .audio-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(0, 122, 255, 0.16);
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .audio-filename {
+      font-size: 13px;
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .audio-sub {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-top: 2px;
+    }
+
+    .waveform-canvas {
+      width: 100%;
+      height: 46px;
+      margin-top: 10px;
+      border-radius: 10px;
+      background: #0b0c10;
+      border: 1px solid var(--border-subtle);
+      display: block;
+      cursor: pointer;
+    }
+
+    .range-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .range-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #007aff;
+      cursor: pointer;
+    }
+
+    /* Message Sequence Rows */
+    .msg-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+      max-height: 460px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .msg-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      background: var(--bg-card-alt);
+      border: 1px solid var(--border-subtle);
+      border-radius: 13px;
+      padding: 9px 10px;
+      transition: border-color 0.15s ease;
+    }
+
+    .msg-row.sync-highlight {
+      border-color: #fb7185;
+      box-shadow: 0 0 0 2px rgba(251, 113, 133, 0.25);
+    }
+
+    .sender-pill {
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      border: 1px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sender-pill.me {
+      background: rgba(0, 122, 255, 0.18);
+      color: #60a5fa;
+      border-color: rgba(0, 122, 255, 0.4);
+    }
+
+    .sender-pill.me.green {
+      background: rgba(52, 199, 89, 0.18);
+      color: #4ade80;
+      border-color: rgba(52, 199, 89, 0.4);
+    }
+
+    .sender-pill.them {
+      background: #252730;
+      color: #d4d4d8;
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .msg-textarea {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      resize: vertical;
+      min-height: 34px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #ffffff;
+      outline: none;
+      padding: 4px 4px;
+    }
+
+    .delay-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .delay-box span {
+      font-size: 10px;
+      color: var(--text-dim);
+    }
+
+    .delay-input {
+      width: 54px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 5px 6px;
+      font-size: 12px;
+      text-align: center;
+      color: #ffffff;
+      outline: none;
+    }
+
+    .delay-input:focus {
+      border-color: #007aff;
+    }
+
+    /* Right Column: Realistic iPhone 15 Pro Mockup */
+    .preview-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: sticky;
+      top: 76px;
+    }
+
+    @media (max-width: 980px) {
+      .preview-col {
+        position: static;
+      }
+    }
+
+    .iphone-bezel {
+      width: 100%;
+      max-width: 382px;
+      padding: 12px;
+      border-radius: 50px;
+      background: linear-gradient(145deg, #2a2b32 0%, #101013 48%, #1d1e24 100%);
+      box-shadow:
+        0 0 0 2px #3f3f46,
+        0 0 0 5px #070709,
+        0 28px 70px rgba(0, 0, 0, 0.88),
+        inset 0 0 12px rgba(255, 255, 255, 0.08);
+      user-select: none;
+    }
+
+    .phone-screen {
+      position: relative;
+      height: 740px;
+      border-radius: 40px;
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transform-origin: center center;
+      will-change: transform;
+      transition: transform 0.08s linear;
+    }
+
+    @media (max-width: 480px) {
+      .iphone-bezel {
+        max-width: 100%;
+        padding: 9px;
+        border-radius: 42px;
+      }
+      .phone-screen {
+        height: 660px;
+        border-radius: 34px;
+      }
+      .workspace {
+        padding: 14px 12px 32px;
+        gap: 16px;
+      }
+      .card {
+        padding: 13px 14px;
+        border-radius: 15px;
+      }
+    }
+
+    /* iOS Top Bar */
+    .ios-top-bar {
+      background: rgba(18, 18, 20, 0.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 20;
+      flex-shrink: 0;
+    }
+
+    .ios-status-row {
+      padding: 12px 24px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .dynamic-island {
+      width: 96px;
+      height: 25px;
+      border-radius: 9999px;
+      background: #000000;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+    }
+
+    .island-lens {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #0c192c;
+      border: 1px solid rgba(56, 189, 248, 0.32);
+    }
+
+    .ios-nav-row {
+      padding: 4px 14px 11px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .ios-back-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: #0a84ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .ios-back-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .ios-contact-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      min-width: 0;
+    }
+
+    .ios-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #52525b, #27272a);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #ffffff;
+      overflow: hidden;
+    }
+
+    .ios-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .ios-contact-name-row {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      margin-top: 3px;
+      max-width: 175px;
+    }
+
+    .ios-contact-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ios-contact-sub {
+      font-size: 10px;
+      color: #8e8e93;
+      margin-top: 1px;
+    }
+
+    /* Circular dark-gray FaceTime / video camera button (NO phone call icon) */
+    .facetime-circle-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 25%, #303034 0%, #242426 68%, #1a1a1d 100%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+      flex-shrink: 0;
+    }
+
+    .facetime-circle-btn:hover {
+      transform: scale(1.06);
+    }
+
+    .facetime-circle-btn:active {
+      transform: scale(0.94);
+    }
+
+    /* Chat Thread */
+    .chat-thread {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      background: #000000;
+      position: relative;
+      z-index: 10;
+    }
+
+    .chat-messages-inner {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .chat-timestamp {
+      text-align: center;
+      margin: 6px 0 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #71717a;
+    }
+
+    @keyframes msgPopUp {
+      0% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.93);
+      }
+      72% {
+        opacity: 1;
+        transform: translateY(-2px) scale(1.01);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .bubble-row {
+      display: flex;
+      width: 100%;
+      animation: msgPopUp 0.34s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    .bubble-row.me {
+      justify-content: flex-end;
+    }
+
+    .bubble-row.them {
+      justify-content: flex-start;
+    }
+
+    .chat-bubble {
+      max-width: 76%;
+      padding: 8px 13px;
+      font-size: 14.5px;
+      line-height: 1.35;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .chat-bubble.me {
+      background: var(--accent);
+      color: #ffffff;
+      border-radius: 18px 18px 5px 18px;
+    }
+
+    .chat-bubble.me.not-tail {
+      border-radius: 18px;
+    }
+
+    .chat-bubble.them {
+      background: var(--ios-bubble-them);
+      color: #f2f2f7;
+      border-radius: 18px 18px 18px 5px;
+    }
+
+    .chat-bubble.them.not-tail {
+      border-radius: 18px;
+    }
+
+    .delivery-receipt {
+      text-align: right;
+      font-size: 10.5px;
+      font-weight: 500;
+      color: #8e8e93;
+      margin-top: 2px;
+      padding-right: 4px;
+      animation: msgPopUp 0.25s ease forwards;
+    }
+
+    /* Typing Indicator */
+    .typing-row {
+      margin-top: 6px;
+      display: flex;
+      align-items: flex-end;
+      animation: msgPopUp 0.28s ease forwards;
+    }
+
+    .typing-row.hidden {
+      display: none;
+    }
+
+    .typing-bubble {
+      background: var(--ios-bubble-them);
+      padding: 10px 13px;
+      border-radius: 18px 18px 18px 5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    @keyframes typingBounce {
+      0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.4;
+      }
+      30% {
+        transform: translateY(-4px);
+        opacity: 1;
+      }
+    }
+
+    .typing-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #a1a1aa;
+      animation: typingBounce 1.2s infinite ease-in-out;
+    }
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.18s;
+    }
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.36s;
+    }
+
+    /* Multi-line Expanding iMessage Composer Bar */
+    .ios-composer-bar {
+      background: rgba(14, 14, 16, 0.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 9px 11px 10px;
+      z-index: 20;
+      flex-shrink: 0;
+    }
+
+    .composer-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+    }
+
+    .plus-btn {
+      width: 33px;
+      height: 33px;
+      border-radius: 50%;
+      background: var(--ios-gray-btn);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e4e4e7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-bottom: 2px;
+      cursor: pointer;
+    }
+
+    .composer-pill {
+      flex: 1;
+      min-height: 36px;
+      border-radius: 20px;
+      background: var(--ios-pill);
+      border: 1px solid #2c2c2e;
+      padding: 4px 5px 4px 13px;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      transition: border-color 0.16s ease;
+    }
+
+    .composer-pill:focus-within {
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .composer-textarea {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      resize: none;
+      font-size: 14.5px;
+      line-height: 1.35;
+      color: #ffffff;
+      outline: none;
+      padding: 3px 0;
+      max-height: 112px;
+      overflow-y: auto;
+    }
+
+    .composer-textarea::placeholder {
+      color: #71717a;
+    }
+
+    /* Pop-up Send Button inside bottom-right of pill */
+    .send-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #007aff;
+      border: none;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transform-origin: center;
+      transition:
+        opacity 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+        transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+        background-color 0.16s ease,
+        box-shadow 0.16s ease;
+    }
+
+    .send-btn.is-green {
+      background: #34c759;
+    }
+
+    .send-btn.send-hidden {
+      opacity: 0;
+      transform: scale(0.25);
+      pointer-events: none;
+      width: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .send-btn.send-visible {
+      opacity: 1;
+      transform: scale(1);
+      pointer-events: auto;
+    }
+
+    .send-btn.send-pulse {
+      transform: scale(0.82) !important;
+      box-shadow: 0 0 20px rgba(0, 122, 255, 0.92) !important;
+    }
+
+    .send-btn.is-green.send-pulse {
+      box-shadow: 0 0 20px rgba(52, 199, 89, 0.92) !important;
+    }
+
+    .home-indicator-wrap {
+      margin-top: 9px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .home-indicator {
+      width: 126px;
+      height: 4px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Post-Processing Visual Overlays */
+    .overlay-layer {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      z-index: 30;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    .overlay-vhs {
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.04) 0px,
+        rgba(255, 255, 255, 0.04) 1px,
+        rgba(0, 0, 0, 0.28) 2px,
+        rgba(0, 0, 0, 0.28) 4px
+      );
+      mix-blend-mode: screen;
+    }
+
+    .vhs-tracking-bar {
+      display: none;
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 28px;
+      background: linear-gradient(
+        180deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.07) 45%,
+        rgba(120, 220, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0.06) 55%,
+        transparent 100%
+      );
+      animation: vhsScanline 6s linear infinite;
+      z-index: 31;
+      pointer-events: none;
+    }
+
+    .mode-vhs .vhs-tracking-bar {
+      display: block;
+    }
+
+    .mode-vhs .chat-bubble {
+      text-shadow: -1.2px 0 rgba(255, 40, 80, 0.55), 1.2px 0 rgba(40, 220, 255, 0.55);
+    }
+
+    .overlay-film {
+      background: radial-gradient(circle at 50% 50%, transparent 48%, rgba(0, 0, 0, 0.78) 100%);
+    }
+
+    .overlay-crt {
+      background:
+        repeating-linear-gradient(
+          0deg,
+          rgba(0, 0, 0, 0.34) 0px,
+          rgba(0, 0, 0, 0.34) 1px,
+          transparent 1px,
+          transparent 3px
+        ),
+        repeating-linear-gradient(
+          90deg,
+          rgba(255, 0, 0, 0.04) 0px,
+          rgba(0, 255, 0, 0.04) 1px,
+          rgba(0, 120, 255, 0.04) 2px,
+          transparent 3px
+        ),
+        radial-gradient(circle at 50% 50%, transparent 55%, rgba(0, 0, 0, 0.72) 100%);
+    }
+
+    .overlay-cctv {
+      background:
+        linear-gradient(rgba(16, 185, 129, 0.14), rgba(6, 78, 59, 0.24)),
+        repeating-linear-gradient(
+          0deg,
+          rgba(16, 185, 129, 0.07) 0px,
+          rgba(16, 185, 129, 0.07) 1px,
+          rgba(0, 0, 0, 0.25) 2px,
+          rgba(0, 0, 0, 0.25) 4px
+        ),
+        radial-gradient(circle at 50% 50%, transparent 45%, rgba(0, 15, 8, 0.82) 100%);
+      mix-blend-mode: screen;
+    }
+
+    .mode-cctv .chat-bubble.me {
+      background: #059669 !important;
+    }
+
+    .overlay-glow {
+      background: radial-gradient(circle at 50% 35%, rgba(56, 189, 248, 0.14), transparent 70%);
+      mix-blend-mode: screen;
+    }
+
+    .mode-glow .chat-bubble.me {
+      box-shadow: 0 0 22px rgba(0, 122, 255, 0.55);
+    }
+
+    @keyframes vhsScanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(760px); }
+    }
+
+    .hud-stamp {
+      position: absolute;
+      top: 46px;
+      left: 16px;
+      z-index: 32;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 11px;
+      color: #fb7185;
+    }
+
+    .hud-stamp.cctv-style {
+      color: #34d399;
+      border-color: rgba(52, 211, 153, 0.3);
+    }
+
+    .hud-stamp.hidden {
+      display: none;
+    }
+
+    .rec-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #f43f5e;
+      animation: recPulse 1s infinite ease-in-out;
+    }
+
+    .hud-stamp.cctv-style .rec-dot {
+      background: #10b981;
+    }
+
+    @keyframes recPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.85); }
+    }
+
+    /* Quick Guide Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 70;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .modal-backdrop.hidden {
+      display: none;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 540px;
+      max-height: 88vh;
+      overflow-y: auto;
+      background: #14151b;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.85);
+    }
+
+    .guide-step {
+      background: #0d0e12;
+      border: 1px solid var(--border-subtle);
+      border-radius: 13px;
+      padding: 11px 14px;
+      margin-bottom: 10px;
+    }
+
+    .guide-step h4 {
+      margin: 0 0 4px;
+      font-size: 13.5px;
+      color: #ffffff;
+    }
+
+    .guide-step p {
+      margin: 0;
+      font-size: 12.5px;
+      line-height: 1.48;
+      color: var(--text-muted);
+    }
+
+    /* Toast Notice */
+    .toast-box {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 80;
+      max-width: 340px;
+      background: #181920;
+      border: 1px solid var(--border-strong);
+      border-radius: 14px;
+      padding: 11px 15px;
+      font-size: 13px;
+      color: #ffffff;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.75);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .toast-box.hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Studio Header -->
+  <header class="studio-header">
+    <div class="studio-header-inner">
+      <div class="brand-wrap">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#ffffff">
+            <path d="M12 3C6.48 3 2 6.58 2 11c0 2.04.88 3.9 2.33 5.31-.23 1.46-.9 2.86-1.92 3.84a.5.5 0 0 0 .35.85c1.99 0 3.86-.74 5.25-1.8 1.24.36 2.58.56 3.99.56 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-title">iMessage Video Studio</h1>
+          <p class="brand-sub">100% self-contained dark iOS chat animator &amp; 60fps video exporter</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="undoBtn" type="button" class="btn btn-secondary" title="Undo (Ctrl/Cmd+Z)" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 14 4 9 9 4"/>
+            <path d="M20 20v-7a4 4 0 0 0-4-4H4"/>
+          </svg>
+          <span>Undo</span>
+        </button>
+
+        <button id="redoBtn" type="button" class="btn btn-secondary" title="Redo (Ctrl/Cmd+Shift+Z)" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 14 20 9 15 4"/>
+            <path d="M4 20v-7a4 4 0 0 1 4-4h12"/>
+          </svg>
+          <span>Redo</span>
+        </button>
+
+        <button id="openGuideBtn" type="button" class="btn btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>How to Use</span>
+        </button>
+
+        <button id="previewAnimBtn" type="button" class="btn btn-secondary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#38bdf8">
+            <path d="M8 5.14v13.72a1 1 0 0 0 1.52.86l11-6.86a1 1 0 0 0 0-1.72l-11-6.86A1 1 0 0 0 8 5.14z"/>
+          </svg>
+          <span id="previewBtnLabel">Play Preview</span>
+        </button>
+
+        <button id="downloadVideoBtn" type="button" class="btn btn-primary">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span id="downloadBtnLabel">Download Video</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Recording Progress Banner -->
+    <div id="statusBanner" class="status-banner hidden">
+      <div class="status-banner-inner">
+        <div style="display: flex; align-items: center; gap: 9px; min-width: 0;">
+          <span class="rec-dot"></span>
+          <span id="statusText" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ready</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+          <div class="progress-track">
+            <div id="progressBarFill" class="progress-fill"></div>
+          </div>
+          <span id="progressPercent" style="font-family: monospace; color: var(--text-muted); width: 36px; text-align: right;">0%</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="workspace">
+    <!-- Left Column: Controls -->
+    <section class="editor-col">
+      <!-- 1. Contact & Thread Details -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Contact &amp; Thread Details</h2>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button id="presetMidnightBtn" type="button" class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;">Late Night Story</button>
+            <button id="presetLongWrapBtn" type="button" class="btn btn-secondary" style="padding: 5px 10px; font-size: 11px;">Long Multi-Line Test</button>
+            <button id="resetDefaultBtn" type="button" class="btn btn-danger-outline" style="padding: 5px 10px; font-size: 11px;">Reset</button>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div>
+            <label for="contactNameInput" class="field-label">Contact Name</label>
+            <input id="contactNameInput" type="text" value="Maya Lin" maxlength="28" class="field-input" />
+          </div>
+
+          <div>
+            <label for="contactSubtitleInput" class="field-label">Contact Subtitle</label>
+            <input id="contactSubtitleInput" type="text" value="iMessage" maxlength="28" class="field-input" />
+          </div>
+
+          <div>
+            <label for="headerTimestampInput" class="field-label">Thread Timestamp</label>
+            <input id="headerTimestampInput" type="text" value="iMessage • Today 9:41 PM" maxlength="34" class="field-input" />
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top: 12px;">
+          <div>
+            <label for="contactInitialsInput" class="field-label">Avatar Initials</label>
+            <input id="contactInitialsInput" type="text" value="ML" maxlength="2" class="field-input" style="text-transform: uppercase;" />
+          </div>
+
+          <div>
+            <label for="statusTimeInput" class="field-label">iPhone Clock Time</label>
+            <input id="statusTimeInput" type="text" value="9:41" maxlength="8" class="field-input" />
+          </div>
+
+          <div>
+            <label class="field-label">Contact Photo (Optional)</label>
+            <div style="display: flex; gap: 6px;">
+              <label for="avatarPhotoInput" class="btn btn-secondary" style="flex: 1; padding: 8px 10px; font-size: 12px;">Upload Photo</label>
+              <input id="avatarPhotoInput" type="file" accept="image/*" style="display: none;" />
+              <button id="clearAvatarPhotoBtn" type="button" class="icon-btn danger" title="Remove photo" style="display: none;">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-bar">
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div>
+              <label for="themeColorSelect" class="field-label" style="margin-bottom: 3px;">Bubble / Send Color</label>
+              <select id="themeColorSelect" class="field-select" style="padding: 6px 10px; font-size: 12px;">
+                <option value="blue" selected>iMessage Blue (#007AFF)</option>
+                <option value="green">SMS / Text Green (#34C759)</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="typingSpeedSelect" class="field-label" style="margin-bottom: 3px;">Typing Speed</label>
+              <select id="typingSpeedSelect" class="field-select" style="padding: 6px 10px; font-size: 12px;">
+                <option value="fast">Fast (22ms/char)</option>
+                <option value="natural" selected>Natural (38ms/char)</option>
+                <option value="slow">Dramatic (60ms/char)</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="receiptModeSelect" class="field-label" style="margin-bottom: 3px;">Delivery Receipt</label>
+              <select id="receiptModeSelect" class="field-select" style="padding: 6px 10px; font-size: 12px;">
+                <option value="Delivered" selected>Delivered</option>
+                <option value="Read">Read</option>
+                <option value="none">Hidden</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button id="exportJsonBtn" type="button" class="btn btn-secondary" style="padding: 6px 10px; font-size: 11.5px;">Save Project</button>
+            <label for="importJsonInput" class="btn btn-secondary" style="padding: 6px 10px; font-size: 11.5px;">Load Project</label>
+            <input id="importJsonInput" type="file" accept="application/json" style="display: none;" />
+          </div>
+        </div>
+
+        <div class="controls-bar">
+          <label class="switch-wrap">
+            <input id="lengthPauseToggle" type="checkbox" checked />
+            <span class="switch-pill"></span>
+            <div>
+              <div style="font-size: 12.5px; font-weight: 500;">Smart Length-Based Pause</div>
+              <div style="font-size: 11px; color: var(--text-dim);">Adds extra reading/thinking delay for longer messages</div>
+            </div>
+          </label>
+
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="mini-control">
+              <span style="font-size: 11.5px; color: var(--text-muted);">Receipt Delay (s)</span>
+              <input id="receiptDelayInput" type="number" step="0.1" min="0" max="10" value="0.5" class="mini-input" />
+            </div>
+            <div class="mini-control">
+              <span style="font-size: 11.5px; color: var(--text-muted);">Read Delay (s)</span>
+              <input id="readDelayInput" type="number" step="0.1" min="0" max="15" value="1.1" class="mini-input" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Visual Overlays & Camera Motion -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Post-Processing Visual Overlays &amp; Camera</h2>
+            <p class="card-subtitle">Live preview + baked directly into your exported 60fps video.</p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label for="overlaySelect" class="field-label">Overlay Preset</label>
+            <select id="overlaySelect" class="field-select">
+              <option value="none" selected>None (Clean OLED Dark)</option>
+              <option value="vhs">VHS Camcorder (1998 Scanlines &amp; REC)</option>
+              <option value="film">Film Grain &amp; Cinema Vignette</option>
+              <option value="crt">CRT Retro Monitor</option>
+              <option value="cctv">Night Vision / Security CCTV</option>
+              <option value="glow">Soft Dreamy Glow</option>
+            </select>
+          </div>
+
+          <div class="range-group" style="justify-content: center;">
+            <div class="range-header">
+              <span>Overlay Intensity</span>
+              <span id="overlayIntensityValue" style="font-family: monospace;">75%</span>
+            </div>
+            <input id="overlayIntensitySlider" type="range" min="0" max="100" step="5" value="75" />
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 12px;">
+          <div class="range-group">
+            <div class="range-header">
+              <span>Camera Zoom</span>
+              <span id="cameraZoomValue" style="font-family: monospace;">1.00x</span>
+            </div>
+            <input id="cameraZoomSlider" type="range" min="95" max="130" step="1" value="100" />
+          </div>
+
+          <div class="range-group">
+            <div class="range-header">
+              <span>Subtle Camera Drift</span>
+              <span id="cameraDriftValue" style="font-family: monospace;">20%</span>
+            </div>
+            <input id="cameraDriftSlider" type="range" min="0" max="100" step="5" value="20" />
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Song Uploader, Beat Detection, iOS SFX & Beat-Tap Sync -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Song Track, Beat Sync &amp; iOS SFX</h2>
+            <p class="card-subtitle">Auto-detects beats on waveform, snaps message delays to beats, and mixes cleanly.</p>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button id="snapBeatsBtn" type="button" class="btn btn-secondary" style="padding: 6px 10px; font-size: 11.5px;" disabled>
+              Snap to Beats
+            </button>
+            <button id="tapSyncBtn" type="button" class="btn btn-secondary" style="padding: 6px 11px; font-size: 12px;">
+              Tap to Sync Timings
+            </button>
+          </div>
+        </div>
+
+        <div class="audio-drop-row">
+          <div class="audio-meta">
+            <div class="audio-badge">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13"/>
+                <circle cx="6" cy="18" r="3"/>
+                <circle cx="18" cy="16" r="3"/>
+              </svg>
+            </div>
+            <div style="min-width: 0;">
+              <div id="audioFileName" class="audio-filename">No song uploaded (optional)</div>
+              <div id="audioDurationLabel" class="audio-sub">MP3, WAV, M4A, OGG • Auto beat detection &amp; audio/video mix</div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label for="audioFileInput" class="btn btn-secondary" style="padding: 7px 12px; font-size: 12px;">Choose Song</label>
+            <input id="audioFileInput" type="file" accept="audio/*" style="display: none;" />
+
+            <button id="audioPreviewToggleBtn" type="button" class="btn btn-secondary" style="padding: 7px 10px; font-size: 12px;" disabled>Play Song</button>
+            <button id="clearAudioBtn" type="button" class="icon-btn danger" title="Remove song" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <canvas id="waveformCanvas" class="waveform-canvas" width="600" height="46"></canvas>
+
+        <div class="grid-2" style="margin-top: 12px;">
+          <div class="range-group">
+            <div class="range-header">
+              <span>Song Start Offset</span>
+              <span id="songOffsetValue" style="font-family: monospace;">0.0s</span>
+            </div>
+            <input id="songOffsetSlider" type="range" min="0" max="60" step="0.5" value="0" disabled />
+          </div>
+
+          <div class="range-group">
+            <div class="range-header">
+              <span>Song Volume</span>
+              <span id="songVolumeValue" style="font-family: monospace;">85%</span>
+            </div>
+            <input id="songVolumeSlider" type="range" min="0" max="100" step="1" value="85" />
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-top: 10px;">
+          <div class="range-group">
+            <div class="range-header">
+              <span>Music Fade In</span>
+              <span id="fadeInValue" style="font-family: monospace;">0.4s</span>
+            </div>
+            <input id="fadeInSlider" type="range" min="0" max="5" step="0.1" value="0.4" />
+          </div>
+
+          <div class="range-group">
+            <div class="range-header">
+              <span>Music Fade Out</span>
+              <span id="fadeOutValue" style="font-family: monospace;">0.8s</span>
+            </div>
+            <input id="fadeOutSlider" type="range" min="0" max="5" step="0.1" value="0.8" />
+          </div>
+        </div>
+
+        <div class="controls-bar">
+          <label class="switch-wrap">
+            <input id="sfxToggleInput" type="checkbox" checked />
+            <span class="switch-pill"></span>
+            <div>
+              <div style="font-size: 13px; font-weight: 500;">iOS Keyboard &amp; Swoosh Sound Effects</div>
+              <div style="font-size: 11px; color: var(--text-dim);">Separate typing click &amp; send/receive notification volumes</div>
+            </div>
+          </label>
+
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div class="range-group" style="min-width: 125px;">
+              <div class="range-header">
+                <span>Typing SFX</span>
+                <span id="typingSfxValue" style="font-family: monospace;">55%</span>
+              </div>
+              <input id="typingSfxSlider" type="range" min="0" max="100" step="5" value="55" />
+            </div>
+
+            <div class="range-group" style="min-width: 125px;">
+              <div class="range-header">
+                <span>Notify SFX</span>
+                <span id="notifySfxValue" style="font-family: monospace;">75%</span>
+              </div>
+              <input id="notifySfxSlider" type="range" min="0" max="100" step="5" value="75" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Message Sequence & Custom Intervals -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title">Message Sequence &amp; Custom Intervals</h2>
+            <p class="card-subtitle">Drag handles to reorder, duplicate, add standalone pauses, or preview single lines.</p>
+          </div>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button id="addPauseRowBtn" type="button" class="btn btn-secondary" style="padding: 6px 10px; font-size: 11.5px; color: #7dd3fc;">
+              + Add Pause
+            </button>
+            <button id="addMessageRowBtn" type="button" class="btn btn-secondary" style="padding: 6px 11px; font-size: 12px; color: #38bdf8;">
+              + Add Message
+            </button>
+          </div>
+        </div>
+
+        <div id="messagesEditorList" class="msg-list"></div>
+      </div>
+    </section>
+
+    <!-- Right Column: Live iPhone Preview -->
+    <section class="preview-col">
+      <div class="iphone-bezel">
+        <div id="phoneScreen" class="phone-screen">
+          <div id="overlayLayer" class="overlay-layer"></div>
+          <div class="vhs-tracking-bar"></div>
+
+          <!-- VHS / CCTV Timecode Stamp -->
+          <div id="hudStamp" class="hud-stamp hidden">
+            <span class="rec-dot"></span>
+            <span id="hudModeLabel">VHS • SP</span>
+            <span id="hudTimecode" style="color: #e4e4e7;">00:00:00</span>
+          </div>
+
+          <!-- iOS Top Bar -->
+          <div class="ios-top-bar">
+            <div class="ios-status-row">
+              <span id="previewStatusTime">9:41</span>
+              <div class="dynamic-island">
+                <span class="island-lens"></span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="2" y="14" width="3" height="7" rx="1"/>
+                  <rect x="7" y="11" width="3" height="10" rx="1"/>
+                  <rect x="12" y="7" width="3" height="14" rx="1"/>
+                  <rect x="17" y="3" width="3" height="18" rx="1"/>
+                </svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12.55a11 11 0 0 1 14.08 0"/>
+                  <path d="M8.53 16.11a6 6 0 0 1 6.95 0"/>
+                  <circle cx="12" cy="20" r="1" fill="currentColor"/>
+                </svg>
+                <div style="width: 22px; height: 11px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.65); padding: 1.5px; display: flex;">
+                  <div style="width: 100%; height: 100%; background: #ffffff; border-radius: 1.5px;"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ios-nav-row">
+              <button id="replayHeaderBtn" type="button" class="ios-back-btn" title="Replay animation">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="15 18 9 12 15 6"/>
+                </svg>
+              </button>
+
+              <div class="ios-contact-center" onclick="document.getElementById('contactNameInput').focus()">
+                <div id="previewAvatarWrap" class="ios-avatar">
+                  <span id="previewAvatarInitials">ML</span>
+                </div>
+                <div class="ios-contact-name-row">
+                  <span id="previewContactName" class="ios-contact-name">Maya Lin</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
+                </div>
+                <span id="previewContactSub" class="ios-contact-sub">iMessage</span>
+              </div>
+
+              <!-- Circular dark-gray FaceTime / video camera button (NO phone call icon) -->
+              <button id="facetimeVideoBtn" type="button" aria-label="FaceTime Video" title="FaceTime Video" class="facetime-circle-btn">
+                <svg width="21" height="16" viewBox="0 0 28 20" fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="15.5" height="14" rx="3.5"/>
+                  <path d="M17.5 7.8l8-4.3v13l-8-4.3v-4.4z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat Thread -->
+          <div id="chatThread" class="chat-thread">
+            <div id="chatMessagesInner" class="chat-messages-inner">
+              <div class="chat-timestamp">
+                <span id="previewHeaderLabel">iMessage • Today 9:41 PM</span>
+              </div>
+            </div>
+
+            <div id="typingIndicator" class="typing-row hidden">
+              <div class="typing-bubble">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Expanding Multi-Line Composer Bar -->
+          <div class="ios-composer-bar">
+            <div class="composer-row">
+              <button type="button" aria-label="Apps" class="plus-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+              </button>
+
+              <div class="composer-pill">
+                <textarea
+                  id="composerInput"
+                  rows="1"
+                  placeholder="iMessage"
+                  class="composer-textarea"
+                ></textarea>
+
+                <button id="sendButton" type="button" aria-label="Send" class="send-btn send-hidden">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="19" x2="12" y2="5"/>
+                    <polyline points="5 12 12 5 19 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="home-indicator-wrap">
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Hidden HTML5 Audio Element -->
+  <audio id="songAudioEl" preload="auto"></audio>
+
+  <!-- How to Use Modal -->
+  <div id="guideModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="card-header" style="margin-bottom: 14px;">
+        <div>
+          <h3 style="margin: 0; font-size: 16px; font-weight: 700;">How to Use iMessage Video Studio</h3>
+          <p class="card-subtitle">Create dark-mode iMessage videos with custom timing, overlays &amp; music</p>
+        </div>
+        <button id="closeGuideBtn" type="button" class="icon-btn" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="guide-step">
+        <h4>1. Customize Contact &amp; Thread Style</h4>
+        <p>Set the contact name, subtitle, initials or custom photo, status bar clock, and choose between <strong>iMessage Blue (#007AFF)</strong> and <strong>SMS Green (#34C759)</strong>.</p>
+      </div>
+
+      <div class="guide-step">
+        <h4>2. Script Messages &amp; Custom Intervals</h4>
+        <p>Click <strong>Sent (Me)</strong> or <strong>Received</strong> on any row to toggle sides, write short or multi-line messages, add standalone pauses, reorder by drag-and-drop, and adjust <strong>Wait (s)</strong>, typing speed, and hesitation.</p>
+      </div>
+
+      <div class="guide-step">
+        <h4>3. Add a Song, Detect Beats &amp; Sync</h4>
+        <p>Upload any MP3/WAV/M4A/OGG track, view detected beat markers on the waveform, click <strong>Snap to Beats</strong> or <strong>Tap to Sync Timings</strong> (press <strong>Spacebar</strong> on each beat), and set fade-in/fade-out and SFX volumes.</p>
+      </div>
+
+      <div class="guide-step">
+        <h4>4. Pick an Overlay &amp; Export 60fps Video</h4>
+        <p>Select a visual overlay (<strong>VHS Camcorder</strong>, <strong>Film Grain</strong>, <strong>CRT Monitor</strong>, <strong>Night Vision CCTV</strong>, or <strong>Soft Glow</strong>), adjust camera zoom/drift, and click <strong>Download Video</strong> to export with audio mixing.</p>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button id="gotItGuideBtn" type="button" class="btn btn-primary">Got It</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notice -->
+  <div id="toastBox" class="toast-box hidden">
+    <span style="color: #38bdf8;">●</span>
+    <span id="toastMessage"></span>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const STORAGE_KEY = 'imessage_video_studio_standalone_v2';
+
+      function uid() {
+        return 'msg_' + Math.random().toString(36).slice(2, 9);
+      }
+
+      const PRESETS = {
+        midnight: [
+          { id: uid(), type: 'message', sender: 'them', text: 'Are you still awake? Just finished editing the clip.', delay: 0.6, speedMult: 1.0, hesitate: false, hesitateSec: 0.45 },
+          { id: uid(), type: 'message', sender: 'me', text: 'Yeah I am! Send it over, let me see how the dark grade looks.', delay: 0.7, speedMult: 1.05, hesitate: true, hesitateSec: 0.5 },
+          { id: uid(), type: 'message', sender: 'them', text: 'Added subtle VHS scanlines and kept the bubbles super clean.', delay: 0.8, speedMult: 0.95, hesitate: false, hesitateSec: 0.4 },
+          { id: uid(), type: 'message', sender: 'me', text: 'That looks straight out of a late-night film.', delay: 0.6, speedMult: 1.0, hesitate: false, hesitateSec: 0.4 }
+        ],
+        longWrap: [
+          { id: uid(), type: 'message', sender: 'them', text: 'Show me how the input box handles longer multi-line messages before sending.', delay: 0.5, speedMult: 1.0, hesitate: false, hesitateSec: 0.4 },
+          { id: uid(), type: 'message', sender: 'me', text: 'hello this is just a test to prove how the message goes down onto multiple lines smoothly while keeping the send button anchored at the bottom right', delay: 0.8, speedMult: 1.1, hesitate: true, hesitateSec: 0.55 },
+          { id: uid(), type: 'message', sender: 'them', text: 'Clean! The rounded pill expanded upward without cutting anything off.', delay: 0.7, speedMult: 1.0, hesitate: false, hesitateSec: 0.4 }
+        ]
+      };
+
+      const SPEED_MAP = {
+        fast: 22,
+        natural: 38,
+        slow: 60
+      };
+
+      const state = {
+        contactName: 'Maya Lin',
+        contactSubtitle: 'iMessage',
+        contactInitials: 'ML',
+        avatarDataUrl: '',
+        statusTime: '9:41',
+        headerLabel: 'iMessage • Today 9:41 PM',
+        overlayMode: 'none',
+        overlayIntensity: 0.75,
+        cameraZoom: 1.0,
+        cameraDrift: 0.2,
+        themeColor: 'blue',
+        typingSpeed: 'natural',
+        lengthBasedPause: true,
+        receiptMode: 'Delivered',
+        receiptDelay: 0.5,
+        readDelay: 1.1,
+        sfxEnabled: true,
+        typingSfxVolume: 0.55,
+        notifySfxVolume: 0.75,
+        messages: PRESETS.midnight.map((m) => ({ ...m })),
+        audioUrl: null,
+        audioFileName: '',
+        audioDuration: 0,
+        songOffset: 0,
+        songVolume: 0.85,
+        fadeInSec: 0.4,
+        fadeOutSec: 0.8,
+        waveformPeaks: [],
+        detectedBeats: [],
+        timelineElapsedSec: 0,
+        isPlaying: false,
+        isExporting: false,
+        isTapSyncing: false,
+        tapSyncIndex: 0,
+        tapLastTimestamp: 0,
+        tapLastAudioTime: null,
+        tapSyncItems: [],
+        cancelToken: 0,
+        draggedId: null
+      };
+
+      const undoStack = [];
+      const redoStack = [];
+      let isRestoringHistory = false;
+
+      let audioCtx = null;
+      let audioSourceNode = null;
+      let audioGainNode = null;
+      let sfxBusGainNode = null;
+      let compressorNode = null;
+      let audioDestNode = null;
+      let cachedAvatarImg = null;
+      let grainPatternCanvas = null;
+
+      const els = {
+        undoBtn: document.getElementById('undoBtn'),
+        redoBtn: document.getElementById('redoBtn'),
+        contactNameInput: document.getElementById('contactNameInput'),
+        contactSubtitleInput: document.getElementById('contactSubtitleInput'),
+        contactInitialsInput: document.getElementById('contactInitialsInput'),
+        statusTimeInput: document.getElementById('statusTimeInput'),
+        headerTimestampInput: document.getElementById('headerTimestampInput'),
+        avatarPhotoInput: document.getElementById('avatarPhotoInput'),
+        clearAvatarPhotoBtn: document.getElementById('clearAvatarPhotoBtn'),
+        themeColorSelect: document.getElementById('themeColorSelect'),
+        typingSpeedSelect: document.getElementById('typingSpeedSelect'),
+        lengthPauseToggle: document.getElementById('lengthPauseToggle'),
+        receiptModeSelect: document.getElementById('receiptModeSelect'),
+        receiptDelayInput: document.getElementById('receiptDelayInput'),
+        readDelayInput: document.getElementById('readDelayInput'),
+        exportJsonBtn: document.getElementById('exportJsonBtn'),
+        importJsonInput: document.getElementById('importJsonInput'),
+        overlaySelect: document.getElementById('overlaySelect'),
+        overlayIntensitySlider: document.getElementById('overlayIntensitySlider'),
+        overlayIntensityValue: document.getElementById('overlayIntensityValue'),
+        cameraZoomSlider: document.getElementById('cameraZoomSlider'),
+        cameraZoomValue: document.getElementById('cameraZoomValue'),
+        cameraDriftSlider: document.getElementById('cameraDriftSlider'),
+        cameraDriftValue: document.getElementById('cameraDriftValue'),
+        presetMidnightBtn: document.getElementById('presetMidnightBtn'),
+        presetLongWrapBtn: document.getElementById('presetLongWrapBtn'),
+        resetDefaultBtn: document.getElementById('resetDefaultBtn'),
+        audioFileInput: document.getElementById('audioFileInput'),
+        audioFileName: document.getElementById('audioFileName'),
+        audioDurationLabel: document.getElementById('audioDurationLabel'),
+        audioPreviewToggleBtn: document.getElementById('audioPreviewToggleBtn'),
+        clearAudioBtn: document.getElementById('clearAudioBtn'),
+        waveformCanvas: document.getElementById('waveformCanvas'),
+        songOffsetSlider: document.getElementById('songOffsetSlider'),
+        songOffsetValue: document.getElementById('songOffsetValue'),
+        songVolumeSlider: document.getElementById('songVolumeSlider'),
+        songVolumeValue: document.getElementById('songVolumeValue'),
+        fadeInSlider: document.getElementById('fadeInSlider'),
+        fadeInValue: document.getElementById('fadeInValue'),
+        fadeOutSlider: document.getElementById('fadeOutSlider'),
+        fadeOutValue: document.getElementById('fadeOutValue'),
+        sfxToggleInput: document.getElementById('sfxToggleInput'),
+        typingSfxSlider: document.getElementById('typingSfxSlider'),
+        typingSfxValue: document.getElementById('typingSfxValue'),
+        notifySfxSlider: document.getElementById('notifySfxSlider'),
+        notifySfxValue: document.getElementById('notifySfxValue'),
+        snapBeatsBtn: document.getElementById('snapBeatsBtn'),
+        tapSyncBtn: document.getElementById('tapSyncBtn'),
+        songAudioEl: document.getElementById('songAudioEl'),
+        addPauseRowBtn: document.getElementById('addPauseRowBtn'),
+        addMessageRowBtn: document.getElementById('addMessageRowBtn'),
+        messagesEditorList: document.getElementById('messagesEditorList'),
+        phoneScreen: document.getElementById('phoneScreen'),
+        overlayLayer: document.getElementById('overlayLayer'),
+        hudStamp: document.getElementById('hudStamp'),
+        hudModeLabel: document.getElementById('hudModeLabel'),
+        hudTimecode: document.getElementById('hudTimecode'),
+        previewStatusTime: document.getElementById('previewStatusTime'),
+        previewAvatarWrap: document.getElementById('previewAvatarWrap'),
+        previewAvatarInitials: document.getElementById('previewAvatarInitials'),
+        previewContactName: document.getElementById('previewContactName'),
+        previewContactSub: document.getElementById('previewContactSub'),
+        previewHeaderLabel: document.getElementById('previewHeaderLabel'),
+        chatThread: document.getElementById('chatThread'),
+        chatMessagesInner: document.getElementById('chatMessagesInner'),
+        typingIndicator: document.getElementById('typingIndicator'),
+        composerInput: document.getElementById('composerInput'),
+        sendButton: document.getElementById('sendButton'),
+        facetimeVideoBtn: document.getElementById('facetimeVideoBtn'),
+        replayHeaderBtn: document.getElementById('replayHeaderBtn'),
+        previewAnimBtn: document.getElementById('previewAnimBtn'),
+        previewBtnLabel: document.getElementById('previewBtnLabel'),
+        downloadVideoBtn: document.getElementById('downloadVideoBtn'),
+        downloadBtnLabel: document.getElementById('downloadBtnLabel'),
+        statusBanner: document.getElementById('statusBanner'),
+        statusText: document.getElementById('statusText'),
+        progressBarFill: document.getElementById('progressBarFill'),
+        progressPercent: document.getElementById('progressPercent'),
+        openGuideBtn: document.getElementById('openGuideBtn'),
+        guideModal: document.getElementById('guideModal'),
+        closeGuideBtn: document.getElementById('closeGuideBtn'),
+        gotItGuideBtn: document.getElementById('gotItGuideBtn'),
+        toastBox: document.getElementById('toastBox'),
+        toastMessage: document.getElementById('toastMessage')
+      };
+
+      function sleep(ms) {
+        return new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)));
+      }
+
+      function showToast(msg) {
+        els.toastMessage.textContent = msg;
+        els.toastBox.classList.remove('hidden');
+        clearTimeout(showToast._timer);
+        showToast._timer = setTimeout(() => {
+          els.toastBox.classList.add('hidden');
+        }, 3400);
+      }
+
+      function updateStatusBanner(visible, text = '', percent = 0) {
+        if (!visible) {
+          els.statusBanner.classList.add('hidden');
+          return;
+        }
+        els.statusBanner.classList.remove('hidden');
+        els.statusText.textContent = text;
+        const clamped = Math.max(0, Math.min(100, Math.round(percent)));
+        els.progressBarFill.style.width = clamped + '%';
+        els.progressPercent.textContent = clamped + '%';
+      }
+
+      function getAccentHex() {
+        if (state.overlayMode === 'cctv') return '#059669';
+        return state.themeColor === 'green' ? '#34c759' : '#007aff';
+      }
+
+      function snapshotProject() {
+        return {
+          contactName: state.contactName,
+          contactSubtitle: state.contactSubtitle,
+          contactInitials: state.contactInitials,
+          avatarDataUrl: state.avatarDataUrl,
+          statusTime: state.statusTime,
+          headerLabel: state.headerLabel,
+          overlayMode: state.overlayMode,
+          overlayIntensity: state.overlayIntensity,
+          cameraZoom: state.cameraZoom,
+          cameraDrift: state.cameraDrift,
+          themeColor: state.themeColor,
+          typingSpeed: state.typingSpeed,
+          lengthBasedPause: state.lengthBasedPause,
+          receiptMode: state.receiptMode,
+          receiptDelay: state.receiptDelay,
+          readDelay: state.readDelay,
+          sfxEnabled: state.sfxEnabled,
+          typingSfxVolume: state.typingSfxVolume,
+          notifySfxVolume: state.notifySfxVolume,
+          songOffset: state.songOffset,
+          songVolume: state.songVolume,
+          fadeInSec: state.fadeInSec,
+          fadeOutSec: state.fadeOutSec,
+          messages: state.messages.map((m) => ({
+            id: m.id,
+            type: m.type || 'message',
+            sender: m.sender || 'them',
+            text: m.text || '',
+            delay: Number(m.delay) || 0.7,
+            speedMult: Number(m.speedMult) || 1.0,
+            hesitate: Boolean(m.hesitate),
+            hesitateSec: Number(m.hesitateSec) || 0.45
+          }))
+        };
+      }
+
+      function applyProjectSnapshot(snap) {
+        if (!snap || typeof snap !== 'object') return;
+        if (typeof snap.contactName === 'string') state.contactName = snap.contactName;
+        if (typeof snap.contactSubtitle === 'string') state.contactSubtitle = snap.contactSubtitle;
+        if (typeof snap.contactInitials === 'string') state.contactInitials = snap.contactInitials;
+        if (typeof snap.avatarDataUrl === 'string') state.avatarDataUrl = snap.avatarDataUrl;
+        if (typeof snap.statusTime === 'string') state.statusTime = snap.statusTime;
+        if (typeof snap.headerLabel === 'string') state.headerLabel = snap.headerLabel;
+        if (['none', 'vhs', 'film', 'crt', 'cctv', 'glow'].includes(snap.overlayMode)) {
+          state.overlayMode = snap.overlayMode;
+        }
+        if (typeof snap.overlayIntensity === 'number') {
+          state.overlayIntensity = Math.min(1, Math.max(0, snap.overlayIntensity));
+        }
+        if (typeof snap.cameraZoom === 'number') {
+          state.cameraZoom = Math.min(1.35, Math.max(0.9, snap.cameraZoom));
+        }
+        if (typeof snap.cameraDrift === 'number') {
+          state.cameraDrift = Math.min(1, Math.max(0, snap.cameraDrift));
+        }
+        if (snap.themeColor === 'green' || snap.themeColor === 'blue') state.themeColor = snap.themeColor;
+        if (SPEED_MAP[snap.typingSpeed]) state.typingSpeed = snap.typingSpeed;
+        if (typeof snap.lengthBasedPause === 'boolean') state.lengthBasedPause = snap.lengthBasedPause;
+        if (['Delivered', 'Read', 'none'].includes(snap.receiptMode)) state.receiptMode = snap.receiptMode;
+        if (typeof snap.receiptDelay === 'number') state.receiptDelay = Math.max(0, snap.receiptDelay);
+        if (typeof snap.readDelay === 'number') state.readDelay = Math.max(0, snap.readDelay);
+        if (typeof snap.sfxEnabled === 'boolean') state.sfxEnabled = snap.sfxEnabled;
+        if (typeof snap.typingSfxVolume === 'number') state.typingSfxVolume = Math.min(1, Math.max(0, snap.typingSfxVolume));
+        if (typeof snap.notifySfxVolume === 'number') state.notifySfxVolume = Math.min(1, Math.max(0, snap.notifySfxVolume));
+        if (typeof snap.songOffset === 'number') state.songOffset = Math.max(0, snap.songOffset);
+        if (typeof snap.songVolume === 'number') state.songVolume = Math.min(1, Math.max(0, snap.songVolume));
+        if (typeof snap.fadeInSec === 'number') state.fadeInSec = Math.max(0, snap.fadeInSec);
+        if (typeof snap.fadeOutSec === 'number') state.fadeOutSec = Math.max(0, snap.fadeOutSec);
+
+        if (Array.isArray(snap.messages) && snap.messages.length > 0) {
+          state.messages = snap.messages.map((m) => ({
+            id: typeof m.id === 'string' ? m.id : uid(),
+            type: m.type === 'pause' ? 'pause' : 'message',
+            sender: m.sender === 'me' ? 'me' : 'them',
+            text: typeof m.text === 'string' ? m.text : '',
+            delay: typeof m.delay === 'number' && m.delay >= 0 ? m.delay : 0.7,
+            speedMult: typeof m.speedMult === 'number' && m.speedMult > 0 ? m.speedMult : 1.0,
+            hesitate: Boolean(m.hesitate),
+            hesitateSec: typeof m.hesitateSec === 'number' && m.hesitateSec >= 0 ? m.hesitateSec : 0.45
+          }));
+        }
+      }
+
+      function updateUndoRedoButtons() {
+        els.undoBtn.disabled = undoStack.length === 0;
+        els.redoBtn.disabled = redoStack.length === 0;
+      }
+
+      function pushUndoCheckpoint() {
+        if (isRestoringHistory) return;
+        const snap = JSON.stringify(snapshotProject());
+        if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== snap) {
+          undoStack.push(snap);
+          if (undoStack.length > 60) undoStack.shift();
+          redoStack.length = 0;
+          updateUndoRedoButtons();
+        }
+      }
+
+      function performUndo() {
+        if (undoStack.length === 0) return;
+        const currentSnap = JSON.stringify(snapshotProject());
+        redoStack.push(currentSnap);
+        const prevSnap = JSON.parse(undoStack.pop());
+        isRestoringHistory = true;
+        applyProjectSnapshot(prevSnap);
+        isRestoringHistory = false;
+        updateUndoRedoButtons();
+        updateAvatarImageCache();
+        syncControlsFromState();
+        applyThemeAndHeader();
+        renderEditorList();
+        drawWaveform();
+        saveState();
+        showToast('Undid last change');
+      }
+
+      function performRedo() {
+        if (redoStack.length === 0) return;
+        const currentSnap = JSON.stringify(snapshotProject());
+        undoStack.push(currentSnap);
+        const nextSnap = JSON.parse(redoStack.pop());
+        isRestoringHistory = true;
+        applyProjectSnapshot(nextSnap);
+        isRestoringHistory = false;
+        updateUndoRedoButtons();
+        updateAvatarImageCache();
+        syncControlsFromState();
+        applyThemeAndHeader();
+        renderEditorList();
+        drawWaveform();
+        saveState();
+        showToast('Redid change');
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshotProject()));
+        } catch (err) {
+          // Ignore quota errors
+        }
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+          applyProjectSnapshot(JSON.parse(raw));
+        } catch (err) {
+          // Ignore malformed storage
+        }
+      }
+
+      function syncControlsFromState() {
+        els.contactNameInput.value = state.contactName;
+        els.contactSubtitleInput.value = state.contactSubtitle;
+        els.contactInitialsInput.value = state.contactInitials;
+        els.statusTimeInput.value = state.statusTime;
+        els.headerTimestampInput.value = state.headerLabel;
+        els.overlaySelect.value = state.overlayMode;
+        els.overlayIntensitySlider.value = Math.round(state.overlayIntensity * 100);
+        els.overlayIntensityValue.textContent = `${Math.round(state.overlayIntensity * 100)}%`;
+        els.cameraZoomSlider.value = Math.round(state.cameraZoom * 100);
+        els.cameraZoomValue.textContent = `${state.cameraZoom.toFixed(2)}x`;
+        els.cameraDriftSlider.value = Math.round(state.cameraDrift * 100);
+        els.cameraDriftValue.textContent = `${Math.round(state.cameraDrift * 100)}%`;
+        els.themeColorSelect.value = state.themeColor;
+        els.typingSpeedSelect.value = state.typingSpeed;
+        els.lengthPauseToggle.checked = state.lengthBasedPause;
+        els.receiptModeSelect.value = state.receiptMode;
+        els.receiptDelayInput.value = Number(state.receiptDelay).toFixed(1);
+        els.readDelayInput.value = Number(state.readDelay).toFixed(1);
+        els.sfxToggleInput.checked = state.sfxEnabled;
+        els.typingSfxSlider.value = Math.round(state.typingSfxVolume * 100);
+        els.typingSfxValue.textContent = `${Math.round(state.typingSfxVolume * 100)}%`;
+        els.notifySfxSlider.value = Math.round(state.notifySfxVolume * 100);
+        els.notifySfxValue.textContent = `${Math.round(state.notifySfxVolume * 100)}%`;
+        els.songVolumeSlider.value = Math.round(state.songVolume * 100);
+        els.songVolumeValue.textContent = `${Math.round(state.songVolume * 100)}%`;
+        els.fadeInSlider.value = Number(state.fadeInSec).toFixed(1);
+        els.fadeInValue.textContent = `${Number(state.fadeInSec).toFixed(1)}s`;
+        els.fadeOutSlider.value = Number(state.fadeOutSec).toFixed(1);
+        els.fadeOutValue.textContent = `${Number(state.fadeOutSec).toFixed(1)}s`;
+        els.songOffsetValue.textContent = `${Number(state.songOffset).toFixed(1)}s`;
+        els.songAudioEl.volume = state.songVolume;
+        els.clearAvatarPhotoBtn.style.display = state.avatarDataUrl ? 'inline-flex' : 'none';
+      }
+
+      function updateAvatarImageCache() {
+        if (!state.avatarDataUrl) {
+          cachedAvatarImg = null;
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          cachedAvatarImg = img;
+        };
+        img.src = state.avatarDataUrl;
+      }
+
+      function getCameraTransform(elapsedSec) {
+        const amp = state.cameraDrift * 7;
+        const tx = Math.sin(elapsedSec * 0.85) * amp;
+        const ty = Math.cos(elapsedSec * 0.65) * amp * 0.75;
+        const rot = Math.sin(elapsedSec * 0.5) * (state.cameraDrift * 0.7);
+        const scale = state.cameraZoom;
+        return { tx, ty, rot, scale };
+      }
+
+      function applyCameraToScreen(elapsedSec) {
+        const { tx, ty, rot, scale } = getCameraTransform(elapsedSec);
+        els.phoneScreen.style.transform = `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, 0) rotate(${rot.toFixed(2)}deg) scale(${scale.toFixed(3)})`;
+      }
+
+      function applyThemeAndHeader() {
+        const accent = getAccentHex();
+        document.documentElement.style.setProperty('--accent', accent);
+
+        if (state.themeColor === 'green') {
+          els.sendButton.classList.add('is-green');
+        } else {
+          els.sendButton.classList.remove('is-green');
+        }
+
+        els.previewStatusTime.textContent = state.statusTime.trim() || '9:41';
+        els.previewContactName.textContent = state.contactName.trim() || 'Contact';
+        els.previewContactSub.textContent = state.contactSubtitle.trim() || '';
+        els.previewContactSub.style.display = state.contactSubtitle.trim() ? 'block' : 'none';
+
+        const initials = (state.contactInitials.trim() || state.contactName.trim().slice(0, 2) || 'ML').toUpperCase();
+        if (state.avatarDataUrl) {
+          els.previewAvatarWrap.innerHTML = `<img src="${state.avatarDataUrl}" alt="Contact Avatar" />`;
+        } else {
+          els.previewAvatarWrap.innerHTML = `<span id="previewAvatarInitials">${initials}</span>`;
+        }
+
+        els.previewHeaderLabel.textContent = state.headerLabel.trim() || 'iMessage';
+        els.composerInput.placeholder = state.themeColor === 'green' ? 'Text Message' : 'iMessage';
+
+        els.phoneScreen.classList.remove('mode-vhs', 'mode-film', 'mode-crt', 'mode-cctv', 'mode-glow');
+        els.overlayLayer.className = 'overlay-layer';
+        els.overlayLayer.style.opacity = '0';
+        els.hudStamp.classList.add('hidden');
+        els.hudStamp.classList.remove('cctv-style');
+
+        if (state.overlayMode !== 'none') {
+          els.phoneScreen.classList.add(`mode-${state.overlayMode}`);
+          els.overlayLayer.classList.add(`overlay-${state.overlayMode}`);
+          els.overlayLayer.style.opacity = String(state.overlayIntensity);
+
+          if (state.overlayMode === 'vhs') {
+            els.hudStamp.classList.remove('hidden');
+            els.hudModeLabel.textContent = 'VHS • SP';
+          } else if (state.overlayMode === 'cctv') {
+            els.hudStamp.classList.remove('hidden');
+            els.hudStamp.classList.add('cctv-style');
+            els.hudModeLabel.textContent = 'CAM 01 • IR';
+          }
+        }
+
+        applyCameraToScreen(state.timelineElapsedSec);
+      }
+
+      function autoResizeComposer(forceShowSend = false) {
+        els.composerInput.style.height = 'auto';
+        const nextHeight = Math.min(112, Math.max(24, els.composerInput.scrollHeight));
+        els.composerInput.style.height = nextHeight + 'px';
+
+        const hasText = els.composerInput.value.trim().length > 0 || forceShowSend;
+        if (hasText) {
+          els.sendButton.classList.remove('send-hidden');
+          els.sendButton.classList.add('send-visible');
+        } else {
+          els.sendButton.classList.remove('send-visible');
+          els.sendButton.classList.add('send-hidden');
+        }
+
+        const barEl = els.composerInput.closest('.ios-composer-bar');
+        const barHeight = barEl ? barEl.offsetHeight : 92;
+        els.chatThread.style.paddingBottom = `${Math.max(18, Math.round(barHeight * 0.16))}px`;
+
+        requestAnimationFrame(() => {
+          els.chatThread.scrollTop = els.chatThread.scrollHeight;
+        });
+      }
+
+      function ensureWebAudioGraph() {
+        try {
+          if (!audioCtx) {
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) return null;
+            audioCtx = new AudioContextClass();
+
+            compressorNode = audioCtx.createDynamicsCompressor();
+            compressorNode.threshold.value = -14;
+            compressorNode.knee.value = 18;
+            compressorNode.ratio.value = 6;
+            compressorNode.attack.value = 0.004;
+            compressorNode.release.value = 0.14;
+
+            audioSourceNode = audioCtx.createMediaElementSource(els.songAudioEl);
+            audioGainNode = audioCtx.createGain();
+            sfxBusGainNode = audioCtx.createGain();
+            audioDestNode = audioCtx.createMediaStreamDestination();
+
+            audioSourceNode.connect(audioGainNode);
+            audioGainNode.connect(compressorNode);
+
+            sfxBusGainNode.connect(compressorNode);
+
+            compressorNode.connect(audioCtx.destination);
+            compressorNode.connect(audioDestNode);
+          }
+          if (audioCtx.state === 'suspended') {
+            audioCtx.resume().catch(() => {});
+          }
+          if (audioGainNode) {
+            audioGainNode.gain.value = state.songVolume;
+          }
+          if (sfxBusGainNode) {
+            sfxBusGainNode.gain.value = state.sfxEnabled ? 1 : 0;
+          }
+          return audioDestNode;
+        } catch (err) {
+          return null;
+        }
+      }
+
+      function teardownWebAudioGraph() {
+        try {
+          if (audioSourceNode) audioSourceNode.disconnect();
+          if (audioGainNode) audioGainNode.disconnect();
+          if (sfxBusGainNode) sfxBusGainNode.disconnect();
+          if (compressorNode) compressorNode.disconnect();
+          if (audioCtx && audioCtx.state !== 'closed') {
+            audioCtx.close().catch(() => {});
+          }
+        } catch (err) {
+          // Ignore teardown errors
+        }
+        audioCtx = null;
+        audioSourceNode = null;
+        audioGainNode = null;
+        sfxBusGainNode = null;
+        compressorNode = null;
+        audioDestNode = null;
+      }
+
+      function computeSongFadeGain(elapsedSec) {
+        let g = state.songVolume;
+        if (state.fadeInSec > 0 && elapsedSec < state.fadeInSec) {
+          g *= Math.max(0, elapsedSec / state.fadeInSec);
+        }
+        if (state.fadeOutSec > 0 && state.audioDuration > 0) {
+          const songPos = (state.songOffset || 0) + elapsedSec;
+          const remaining = state.audioDuration - songPos;
+          if (remaining < state.fadeOutSec) {
+            g *= Math.max(0, remaining / state.fadeOutSec);
+          }
+        }
+        return Math.max(0, Math.min(1, g));
+      }
+
+      function updateSongFadeRealtime(elapsedSec) {
+        if (!state.audioUrl || els.songAudioEl.paused) return;
+        const fadedVol = computeSongFadeGain(elapsedSec);
+        els.songAudioEl.volume = fadedVol;
+        if (audioGainNode && audioCtx) {
+          audioGainNode.gain.setTargetAtTime(fadedVol, audioCtx.currentTime, 0.03);
+        }
+      }
+
+      function playSynthesizedSfx(type) {
+        if (!state.sfxEnabled) return;
+        const vol = type === 'key' ? state.typingSfxVolume : state.notifySfxVolume;
+        if (vol <= 0.01) return;
+
+        ensureWebAudioGraph();
+        if (!audioCtx || audioCtx.state !== 'running' || !sfxBusGainNode) return;
+
+        try {
+          const now = audioCtx.currentTime;
+
+          if (type === 'key') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(950 + Math.random() * 240, now);
+            osc.frequency.exponentialRampToValueAtTime(220, now + 0.024);
+
+            gain.gain.setValueAtTime(0.11 * vol, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.026);
+
+            osc.connect(gain);
+            gain.connect(sfxBusGainNode);
+            osc.start(now);
+            osc.stop(now + 0.028);
+          } else if (type === 'send') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(340, now);
+            osc.frequency.exponentialRampToValueAtTime(920, now + 0.12);
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(0.22 * vol, now + 0.03);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+
+            osc.connect(gain);
+            gain.connect(sfxBusGainNode);
+            osc.start(now);
+            osc.stop(now + 0.15);
+          } else if (type === 'receive') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(520, now);
+            osc.frequency.exponentialRampToValueAtTime(760, now + 0.075);
+
+            gain.gain.setValueAtTime(0.001, now);
+            gain.gain.linearRampToValueAtTime(0.2 * vol, now + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.11);
+
+            osc.connect(gain);
+            gain.connect(sfxBusGainNode);
+            osc.start(now);
+            osc.stop(now + 0.12);
+          }
+        } catch (err) {
+          // Ignore Web Audio scheduling errors
+        }
+      }
+
+      async function startSongPlayback() {
+        if (!state.audioUrl) return;
+        ensureWebAudioGraph();
+        try {
+          els.songAudioEl.currentTime = Math.min(state.songOffset, Math.max(0, state.audioDuration - 0.1));
+          els.songAudioEl.volume = state.fadeInSec > 0 ? 0.01 : state.songVolume;
+          await els.songAudioEl.play();
+          els.audioPreviewToggleBtn.textContent = 'Pause Song';
+        } catch (err) {
+          // Autoplay blocked until interaction
+        }
+      }
+
+      function stopSongPlayback() {
+        try {
+          els.songAudioEl.pause();
+          els.songAudioEl.currentTime = state.songOffset || 0;
+          els.songAudioEl.volume = state.songVolume;
+          els.audioPreviewToggleBtn.textContent = 'Play Song';
+        } catch (err) {
+          // Ignore
+        }
+      }
+
+      function detectBeatsFromAudioBuffer(audioBuffer) {
+        const channel = audioBuffer.getChannelData(0);
+        const sampleRate = audioBuffer.sampleRate;
+        const hopSize = Math.max(256, Math.floor(sampleRate / 50));
+        const energies = [];
+
+        for (let i = 0; i + hopSize < channel.length; i += hopSize) {
+          let sumSq = 0;
+          for (let j = 0; j < hopSize; j += 2) {
+            const s = channel[i + j];
+            sumSq += s * s;
+          }
+          energies.push(Math.sqrt(sumSq / (hopSize / 2)));
+        }
+
+        const localWin = 12;
+        const beats = [];
+        const minBeatGapSec = 0.28;
+        let lastBeatTime = -10;
+
+        for (let i = localWin; i < energies.length - 1; i++) {
+          let avg = 0;
+          for (let k = i - localWin; k < i; k++) avg += energies[k];
+          avg /= localWin;
+
+          const flux = energies[i] - energies[i - 1];
+          const timeSec = (i * hopSize) / sampleRate;
+
+          if (energies[i] > avg * 1.38 && flux > 0.015 && energies[i] > 0.05) {
+            if (timeSec - lastBeatTime >= minBeatGapSec) {
+              beats.push(Number(timeSec.toFixed(3)));
+              lastBeatTime = timeSec;
+            }
+          }
+        }
+
+        return beats;
+      }
+
+      function drawWaveform() {
+        const canvas = els.waveformCanvas;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width;
+        const h = canvas.height;
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.fillStyle = '#0b0c10';
+        ctx.fillRect(0, 0, w, h);
+
+        const peaks = state.waveformPeaks;
+        const accent = getAccentHex();
+
+        if (!peaks || peaks.length === 0) {
+          ctx.fillStyle = '#27272a';
+          const bars = 80;
+          const barW = w / bars;
+          for (let i = 0; i < bars; i++) {
+            const amp = 6 + Math.sin(i * 0.35) * 4 + Math.cos(i * 0.9) * 3;
+            ctx.fillRect(i * barW + 2, (h - amp) / 2, Math.max(2, barW - 3), amp);
+          }
+          return;
+        }
+
+        const barW = w / peaks.length;
+        const offsetRatio = state.audioDuration > 0 ? state.songOffset / state.audioDuration : 0;
+        const offsetX = offsetRatio * w;
+
+        peaks.forEach((amp, i) => {
+          const x = i * barW;
+          const barH = Math.max(4, amp * (h - 10));
+          ctx.fillStyle = x >= offsetX ? accent : '#3f3f46';
+          ctx.fillRect(x + 1, (h - barH) / 2, Math.max(2, barW - 2), barH);
+        });
+
+        if (state.audioDuration > 0 && Array.isArray(state.detectedBeats) && state.detectedBeats.length > 0) {
+          ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
+          state.detectedBeats.forEach((beatSec) => {
+            const bx = (beatSec / state.audioDuration) * w;
+            ctx.fillRect(bx - 1, 0, 2, h);
+            ctx.beginPath();
+            ctx.arc(bx, 5, 3, 0, Math.PI * 2);
+            ctx.fill();
+          });
+        }
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(offsetX, 0, 2.5, h);
+
+        if ((state.isPlaying || state.isExporting) && state.audioDuration > 0) {
+          const playSec = state.songOffset + state.timelineElapsedSec;
+          const playX = Math.min(w, Math.max(0, (playSec / state.audioDuration) * w));
+          ctx.fillStyle = '#fb7185';
+          ctx.fillRect(playX - 1, 0, 2.5, h);
+        }
+      }
+
+      async function extractAudioWaveform(arrayBuffer) {
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          const tempCtx = new AudioContextClass();
+          const audioBuffer = await tempCtx.decodeAudioData(arrayBuffer);
+          state.audioDuration = audioBuffer.duration;
+          state.detectedBeats = detectBeatsFromAudioBuffer(audioBuffer);
+          els.snapBeatsBtn.disabled = state.detectedBeats.length === 0;
+
+          const channelData = audioBuffer.getChannelData(0);
+          const samples = 90;
+          const blockSize = Math.floor(channelData.length / samples);
+          const peaks = [];
+          for (let i = 0; i < samples; i++) {
+            let max = 0;
+            const start = i * blockSize;
+            for (let j = 0; j < blockSize; j += 12) {
+              const val = Math.abs(channelData[start + j] || 0);
+              if (val > max) max = val;
+            }
+            peaks.push(max);
+          }
+          state.waveformPeaks = peaks;
+          els.songOffsetSlider.max = Math.max(0, Math.floor(state.audioDuration - 1));
+          els.songOffsetSlider.disabled = false;
+          els.audioDurationLabel.textContent = `${state.audioDuration.toFixed(1)}s • ${state.detectedBeats.length} beats detected`;
+          drawWaveform();
+          tempCtx.close().catch(() => {});
+        } catch (err) {
+          els.audioDurationLabel.textContent = 'Song loaded • Ready for playback & video mix';
+        }
+      }
+
+      function snapMessagesToBeats() {
+        if (!state.detectedBeats || state.detectedBeats.length === 0) {
+          showToast('Upload a song with detected beats first.');
+          return;
+        }
+        pushUndoCheckpoint();
+        let runningTime = state.songOffset || 0;
+        let snappedCount = 0;
+
+        const syncItems = state.messages.filter((item) => item.type === 'pause' || (item.text && item.text.trim().length > 0));
+        syncItems.forEach((item) => {
+          const proposedTime = runningTime + (Number(item.delay) || 0.5);
+          let closestBeat = null;
+          let bestDiff = Infinity;
+
+          for (const b of state.detectedBeats) {
+            const diff = Math.abs(b - proposedTime);
+            if (diff < bestDiff) {
+              bestDiff = diff;
+              closestBeat = b;
+            }
+          }
+
+          if (closestBeat !== null && bestDiff <= 0.65 && closestBeat >= runningTime) {
+            const snappedDelay = Math.max(0.1, Number((closestBeat - runningTime).toFixed(1)));
+            item.delay = snappedDelay;
+            runningTime += snappedDelay + 0.5;
+            snappedCount += 1;
+          } else {
+            runningTime = proposedTime + 0.5;
+          }
+        });
+
+        saveState();
+        renderEditorList();
+        showToast(`Snapped ${snappedCount} item(s) to detected beats!`);
+      }
+
+      function renderEditorList() {
+        els.messagesEditorList.innerHTML = '';
+
+        state.messages.forEach((msg, index) => {
+          const isPause = msg.type === 'pause';
+          const row = document.createElement('div');
+          row.className = `msg-row ${isPause ? 'pause-row' : ''}`;
+          row.draggable = true;
+          row.dataset.id = msg.id;
+
+          if (state.isTapSyncing && state.tapSyncIndex === index) {
+            row.classList.add('sync-highlight');
+          }
+
+          row.addEventListener('dragstart', (e) => {
+            state.draggedId = msg.id;
+            row.classList.add('dragging');
+            if (e.dataTransfer) {
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/plain', msg.id);
+            }
+          });
+
+          row.addEventListener('dragend', () => {
+            state.draggedId = null;
+            row.classList.remove('dragging');
+            els.messagesEditorList.querySelectorAll('.msg-row').forEach((el) => {
+              el.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+          });
+
+          row.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!state.draggedId || state.draggedId === msg.id) return;
+            const rect = row.getBoundingClientRect();
+            const isTop = e.clientY < rect.top + rect.height / 2;
+            row.classList.toggle('drag-over-top', isTop);
+            row.classList.toggle('drag-over-bottom', !isTop);
+          });
+
+          row.addEventListener('dragleave', () => {
+            row.classList.remove('drag-over-top', 'drag-over-bottom');
+          });
+
+          row.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const sourceId = state.draggedId || (e.dataTransfer && e.dataTransfer.getData('text/plain'));
+            row.classList.remove('drag-over-top', 'drag-over-bottom');
+            if (!sourceId || sourceId === msg.id) return;
+
+            const fromIdx = state.messages.findIndex((m) => m.id === sourceId);
+            const toIdx = state.messages.findIndex((m) => m.id === msg.id);
+            if (fromIdx === -1 || toIdx === -1) return;
+
+            pushUndoCheckpoint();
+            const [moved] = state.messages.splice(fromIdx, 1);
+            const rect = row.getBoundingClientRect();
+            const insertAfter = e.clientY >= rect.top + rect.height / 2;
+            const targetIdx = insertAfter ? toIdx + (fromIdx < toIdx ? 0 : 1) : toIdx;
+            state.messages.splice(Math.max(0, Math.min(state.messages.length, targetIdx)), 0, moved);
+            saveState();
+            renderEditorList();
+          });
+
+          const dragHandle = document.createElement('button');
+          dragHandle.type = 'button';
+          dragHandle.className = 'icon-btn drag-handle';
+          dragHandle.title = 'Drag to reorder';
+          dragHandle.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>';
+
+          const bodyCol = document.createElement('div');
+          bodyCol.style.flex = '1';
+          bodyCol.style.minWidth = '0';
+
+          const topLine = document.createElement('div');
+          topLine.style.display = 'flex';
+          topLine.style.alignItems = 'center';
+          topLine.style.gap = '8px';
+
+          if (isPause) {
+            const badge = document.createElement('span');
+            badge.className = 'pause-badge';
+            badge.textContent = 'PAUSE STEP';
+            topLine.appendChild(badge);
+
+            const noteInput = document.createElement('input');
+            noteInput.type = 'text';
+            noteInput.value = msg.text || 'Beat / dramatic hold';
+            noteInput.className = 'msg-textarea';
+            noteInput.style.minHeight = '28px';
+            noteInput.addEventListener('input', (e) => {
+              msg.text = e.target.value;
+              saveState();
+            });
+            topLine.appendChild(noteInput);
+          } else {
+            const senderBtn = document.createElement('button');
+            senderBtn.type = 'button';
+            const isMe = msg.sender === 'me';
+            senderBtn.className = `sender-pill ${isMe ? 'me' : 'them'} ${isMe && state.themeColor === 'green' ? 'green' : ''}`;
+            senderBtn.textContent = isMe ? 'Sent (Me)' : 'Received';
+            senderBtn.title = 'Click to toggle sender';
+            senderBtn.addEventListener('click', () => {
+              pushUndoCheckpoint();
+              msg.sender = msg.sender === 'me' ? 'them' : 'me';
+              saveState();
+              renderEditorList();
+            });
+
+            const textarea = document.createElement('textarea');
+            textarea.rows = 1;
+            textarea.value = msg.text;
+            textarea.placeholder = 'Write message text...';
+            textarea.className = 'msg-textarea';
+            textarea.addEventListener('input', (e) => {
+              msg.text = e.target.value;
+              saveState();
+            });
+
+            topLine.appendChild(senderBtn);
+            topLine.appendChild(textarea);
+
+            const extraLine = document.createElement('div');
+            extraLine.className = 'msg-extra-controls';
+
+            const speedLbl = document.createElement('span');
+            speedLbl.className = 'mini-control';
+            speedLbl.innerHTML = '<span>Speed</span>';
+            const speedInp = document.createElement('input');
+            speedInp.type = 'number';
+            speedInp.step = '0.1';
+            speedInp.min = '0.3';
+            speedInp.max = '3.0';
+            speedInp.value = Number(msg.speedMult || 1.0).toFixed(1);
+            speedInp.className = 'mini-input';
+            speedInp.title = 'Typing speed multiplier (1.0x = normal)';
+            speedInp.addEventListener('change', () => {
+              pushUndoCheckpoint();
+              const v = parseFloat(speedInp.value);
+              msg.speedMult = Number.isNaN(v) ? 1.0 : Math.max(0.3, Math.min(3.0, v));
+              speedInp.value = msg.speedMult.toFixed(1);
+              saveState();
+            });
+            speedLbl.appendChild(speedInp);
+
+            const hesLabel = document.createElement('label');
+            hesLabel.className = 'mini-control';
+            hesLabel.style.cursor = 'pointer';
+            const hesChk = document.createElement('input');
+            hesChk.type = 'checkbox';
+            hesChk.checked = Boolean(msg.hesitate);
+            hesChk.addEventListener('change', () => {
+              pushUndoCheckpoint();
+              msg.hesitate = hesChk.checked;
+              saveState();
+            });
+            const hesSecInp = document.createElement('input');
+            hesSecInp.type = 'number';
+            hesSecInp.step = '0.1';
+            hesSecInp.min = '0.1';
+            hesSecInp.max = '5.0';
+            hesSecInp.value = Number(msg.hesitateSec || 0.45).toFixed(1);
+            hesSecInp.className = 'mini-input';
+            hesSecInp.title = 'Hesitation pause duration (s)';
+            hesSecInp.addEventListener('change', () => {
+              pushUndoCheckpoint();
+              const v = parseFloat(hesSecInp.value);
+              msg.hesitateSec = Number.isNaN(v) ? 0.45 : Math.max(0.1, Math.min(5.0, v));
+              hesSecInp.value = msg.hesitateSec.toFixed(1);
+              saveState();
+            });
+            hesLabel.appendChild(hesChk);
+            hesLabel.appendChild(document.createTextNode('Hesitate'));
+            hesLabel.appendChild(hesSecInp);
+
+            const singlePrevBtn = document.createElement('button');
+            singlePrevBtn.type = 'button';
+            singlePrevBtn.className = 'btn btn-secondary';
+            singlePrevBtn.style.padding = '2px 8px';
+            singlePrevBtn.style.fontSize = '10.5px';
+            singlePrevBtn.style.marginLeft = 'auto';
+            singlePrevBtn.textContent = 'Preview Line';
+            singlePrevBtn.addEventListener('click', () => {
+              previewSingleMessage(msg);
+            });
+
+            extraLine.appendChild(speedLbl);
+            extraLine.appendChild(hesLabel);
+            extraLine.appendChild(singlePrevBtn);
+            bodyCol.appendChild(topLine);
+            bodyCol.appendChild(extraLine);
+          }
+
+          if (isPause) {
+            bodyCol.appendChild(topLine);
+          }
+
+          const delayBox = document.createElement('div');
+          delayBox.className = 'delay-box';
+          const delayLbl = document.createElement('span');
+          delayLbl.textContent = isPause ? 'Hold (s)' : 'Wait (s)';
+          const delayInput = document.createElement('input');
+          delayInput.type = 'number';
+          delayInput.step = '0.1';
+          delayInput.min = '0';
+          delayInput.max = '60';
+          delayInput.value = Number(msg.delay || 0).toFixed(1);
+          delayInput.className = 'delay-input';
+          delayInput.addEventListener('change', (e) => {
+            pushUndoCheckpoint();
+            const val = parseFloat(e.target.value);
+            msg.delay = Number.isNaN(val) ? 0.5 : Math.max(0, Math.min(60, val));
+            delayInput.value = msg.delay.toFixed(1);
+            saveState();
+          });
+          delayBox.appendChild(delayLbl);
+          delayBox.appendChild(delayInput);
+
+          const dupBtn = document.createElement('button');
+          dupBtn.type = 'button';
+          dupBtn.className = 'icon-btn';
+          dupBtn.title = 'Duplicate item';
+          dupBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+          dupBtn.addEventListener('click', () => {
+            pushUndoCheckpoint();
+            const copy = { ...msg, id: uid() };
+            state.messages.splice(index + 1, 0, copy);
+            saveState();
+            renderEditorList();
+            showToast('Duplicated item');
+          });
+
+          const upBtn = document.createElement('button');
+          upBtn.type = 'button';
+          upBtn.className = 'icon-btn';
+          upBtn.title = 'Move up';
+          upBtn.disabled = index === 0;
+          upBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="18 15 12 9 6 15"/></svg>';
+          upBtn.addEventListener('click', () => {
+            if (index > 0) {
+              pushUndoCheckpoint();
+              const tmp = state.messages[index - 1];
+              state.messages[index - 1] = state.messages[index];
+              state.messages[index] = tmp;
+              saveState();
+              renderEditorList();
+            }
+          });
+
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'icon-btn danger';
+          delBtn.title = 'Delete item';
+          delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+          delBtn.addEventListener('click', () => {
+            if (state.messages.length <= 1) {
+              showToast('Keep at least one item in the sequence.');
+              return;
+            }
+            pushUndoCheckpoint();
+            state.messages.splice(index, 1);
+            saveState();
+            renderEditorList();
+          });
+
+          row.appendChild(dragHandle);
+          row.appendChild(bodyCol);
+          row.appendChild(delayBox);
+          row.appendChild(dupBtn);
+          row.appendChild(upBtn);
+          row.appendChild(delBtn);
+          els.messagesEditorList.appendChild(row);
+        });
+      }
+
+      async function toggleTapSyncMode() {
+        if (state.isTapSyncing) {
+          state.isTapSyncing = false;
+          state.tapSyncItems = [];
+          state.tapLastAudioTime = null;
+          els.tapSyncBtn.classList.remove('btn-sync-active');
+          els.tapSyncBtn.textContent = 'Tap to Sync Timings';
+          stopSongPlayback();
+          renderEditorList();
+          saveState();
+          showToast('Beat-tap timing saved!');
+          return;
+        }
+
+        const syncItems = state.messages.filter((item) => item.type === 'pause' || (item.text && item.text.trim().length > 0));
+        if (!syncItems.length) {
+          showToast('Add at least one message or pause first.');
+          return;
+        }
+
+        pushUndoCheckpoint();
+        state.tapSyncItems = syncItems;
+        state.tapSyncIndex = 0;
+        state.tapLastAudioTime = null;
+        await startSongPlayback();
+        state.isTapSyncing = true;
+        els.tapSyncBtn.classList.add('btn-sync-active');
+        els.tapSyncBtn.textContent = `Tap Beat #1 of ${syncItems.length} (Spacebar)`;
+        renderEditorList();
+        showToast('Tap on each beat. The first tap sets the starting point.');
+      }
+
+      function recordBeatTap() {
+        if (!state.isTapSyncing) return;
+        const audioTime = Number(els.songAudioEl.currentTime) || 0;
+        const baseTime = Number(state.songOffset) || 0;
+        const firstTap = state.tapLastAudioTime === null;
+        const deltaSec = firstTap
+          ? Math.max(0, audioTime - baseTime)
+          : Math.max(0.1, audioTime - state.tapLastAudioTime);
+        state.tapLastAudioTime = audioTime;
+
+        if (state.tapSyncIndex < state.tapSyncItems.length) {
+          const item = state.tapSyncItems[state.tapSyncIndex];
+          item.delay = Number(deltaSec.toFixed(2));
+          state.tapSyncIndex += 1;
+          saveState();
+          renderEditorList();
+        }
+
+        if (state.tapSyncIndex >= state.tapSyncItems.length) {
+          toggleTapSyncMode();
+        } else {
+          els.tapSyncBtn.textContent = `Tap Beat #${state.tapSyncIndex + 1} of ${state.tapSyncItems.length} (Spacebar)`;
+        }
+      }
+
+      function clearChatBubbles() {
+        const headerEl = els.previewHeaderLabel.parentElement;
+        els.chatMessagesInner.innerHTML = '';
+        if (headerEl) {
+          els.chatMessagesInner.appendChild(headerEl);
+        }
+        els.typingIndicator.classList.add('hidden');
+        els.composerInput.value = '';
+        autoResizeComposer(false);
+      }
+
+      function updateDeliveryReceipt(labelOverride = null) {
+        const oldReceipt = els.chatMessagesInner.querySelector('.delivery-receipt');
+        if (oldReceipt) oldReceipt.remove();
+
+        const mode = labelOverride || state.receiptMode;
+        if (mode === 'none') return;
+        const rows = els.chatMessagesInner.querySelectorAll('.bubble-row');
+        if (!rows.length) return;
+        const lastRow = rows[rows.length - 1];
+        if (!lastRow.classList.contains('me')) return;
+
+        const receiptEl = document.createElement('div');
+        receiptEl.className = 'delivery-receipt';
+        receiptEl.textContent = mode;
+        els.chatMessagesInner.appendChild(receiptEl);
+      }
+
+      function appendBubble(sender, text, isLastInGroup = true) {
+        const isMe = sender === 'me';
+        const row = document.createElement('div');
+        row.className = `bubble-row ${isMe ? 'me' : 'them'}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${isMe ? 'me' : 'them'} ${isLastInGroup ? '' : 'not-tail'}`;
+        bubble.textContent = text;
+
+        row.appendChild(bubble);
+        els.chatMessagesInner.appendChild(row);
+
+        requestAnimationFrame(() => {
+          els.chatThread.scrollTo({
+            top: els.chatThread.scrollHeight,
+            behavior: 'smooth'
+          });
+        });
+      }
+
+      function computeLengthPauseMs(text) {
+        if (!state.lengthBasedPause) return 0;
+        const len = (text || '').trim().length;
+        if (len <= 25) return 0;
+        return Math.min(1400, (len - 25) * 14);
+      }
+
+      async function executeSingleMessageStep(msg, isLastInGroup, token) {
+        const fullText = (msg.text || '').trim();
+        if (!fullText) return;
+
+        const baseSpeed = SPEED_MAP[state.typingSpeed] || 38;
+        const mult = Number(msg.speedMult) > 0 ? Number(msg.speedMult) : 1.0;
+        const charDelay = baseSpeed / mult;
+
+        if (msg.sender === 'me') {
+          els.composerInput.value = '';
+          autoResizeComposer(false);
+
+          const stepDelay = Math.max(12, Math.min(charDelay * 1.4, 2100 / Math.max(1, fullText.length)));
+          const hesitateAt = msg.hesitate ? Math.max(1, Math.floor(fullText.length * 0.52)) : -1;
+
+          for (let c = 1; c <= fullText.length; c++) {
+            if (state.cancelToken !== token) return;
+            els.composerInput.value = fullText.slice(0, c);
+            autoResizeComposer(true);
+            if (c % 2 === 1) playSynthesizedSfx('key');
+            await sleep(stepDelay);
+
+            if (c === hesitateAt) {
+              await sleep((Number(msg.hesitateSec) || 0.45) * 1000);
+            }
+          }
+
+          autoResizeComposer(true);
+          await sleep(360 + computeLengthPauseMs(fullText) * 0.35);
+          if (state.cancelToken !== token) return;
+
+          els.sendButton.classList.add('send-pulse');
+          playSynthesizedSfx('send');
+          await sleep(220);
+          els.sendButton.classList.remove('send-pulse');
+          await sleep(100);
+
+          els.composerInput.value = '';
+          autoResizeComposer(false);
+
+          appendBubble('me', fullText, isLastInGroup);
+
+          if (state.receiptMode !== 'none') {
+            await sleep(Math.max(100, (Number(state.receiptDelay) || 0.5) * 1000));
+            if (state.cancelToken !== token) return;
+            updateDeliveryReceipt('Delivered');
+
+            if (state.receiptMode === 'Read') {
+              await sleep(Math.max(150, (Number(state.readDelay) || 1.1) * 1000));
+              if (state.cancelToken !== token) return;
+              updateDeliveryReceipt('Read');
+            }
+          }
+        } else {
+          els.typingIndicator.classList.remove('hidden');
+          requestAnimationFrame(() => {
+            els.chatThread.scrollTop = els.chatThread.scrollHeight;
+          });
+
+          const typingMs = Math.min(2200, Math.max(500, fullText.length * (charDelay * 0.68))) + computeLengthPauseMs(fullText) * 0.4;
+          await sleep(typingMs);
+          if (state.cancelToken !== token) return;
+
+          els.typingIndicator.classList.add('hidden');
+          playSynthesizedSfx('receive');
+          appendBubble('them', fullText, isLastInGroup);
+        }
+      }
+
+      async function previewSingleMessage(msg) {
+        if (state.isExporting) return;
+        state.cancelToken += 1;
+        const token = state.cancelToken;
+        state.isPlaying = true;
+        els.previewBtnLabel.textContent = 'Stop / Replay';
+
+        if (msg.type === 'pause') {
+          showToast(`Pausing for ${(Number(msg.delay) || 0.7).toFixed(1)}s...`);
+          await sleep((Number(msg.delay) || 0.7) * 1000);
+        } else {
+          await sleep((Number(msg.delay) || 0) * 1000);
+          if (state.cancelToken === token) {
+            await executeSingleMessageStep(msg, true, token);
+          }
+        }
+
+        if (state.cancelToken === token) {
+          state.isPlaying = false;
+          els.previewBtnLabel.textContent = 'Play Preview';
+        }
+      }
+
+      async function runConversationSequence(token, onProgress = null) {
+        clearChatBubbles();
+        const items = state.messages.filter((m) => m.type === 'pause' || (m.text && m.text.trim().length > 0));
+        const total = Math.max(1, items.length);
+        state.timelineElapsedSec = 0;
+
+        const hudStart = performance.now();
+        const clockTimer = setInterval(() => {
+          const elapsed = (performance.now() - hudStart) / 1000;
+          state.timelineElapsedSec = elapsed;
+          const totalSec = Math.floor(elapsed);
+          const mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
+          const secs = String(totalSec % 60).padStart(2, '0');
+          els.hudTimecode.textContent = `00:${mins}:${secs}`;
+          updateSongFadeRealtime(elapsed);
+          if (!state.isExporting) {
+            applyCameraToScreen(elapsed);
+          }
+          drawWaveform();
+        }, 50);
+
+        try {
+          for (let i = 0; i < items.length; i++) {
+            if (state.cancelToken !== token) return false;
+
+            const item = items[i];
+            const nextItem = items[i + 1];
+            const isLastInGroup = !nextItem || nextItem.type === 'pause' || nextItem.sender !== item.sender;
+
+            const waitSec = Number(item.delay) || 0;
+            if (waitSec > 0) {
+              await sleep(waitSec * 1000);
+              if (state.cancelToken !== token) return false;
+            }
+
+            if (item.type !== 'pause') {
+              await executeSingleMessageStep(item, isLastInGroup, token);
+              if (state.cancelToken !== token) return false;
+              await sleep(220);
+            }
+
+            if (typeof onProgress === 'function') {
+              onProgress(((i + 1) / total) * 100);
+            }
+          }
+
+          await sleep(450);
+          return state.cancelToken === token;
+        } finally {
+          clearInterval(clockTimer);
+          state.timelineElapsedSec = 0;
+          applyCameraToScreen(0);
+          drawWaveform();
+        }
+      }
+
+      function getFilmGrainPattern(ctx) {
+        if (!grainPatternCanvas) {
+          grainPatternCanvas = document.createElement('canvas');
+          grainPatternCanvas.width = 128;
+          grainPatternCanvas.height = 128;
+          const gCtx = grainPatternCanvas.getContext('2d');
+          const imgData = gCtx.createImageData(128, 128);
+          for (let i = 0; i < imgData.data.length; i += 4) {
+            const v = Math.random() > 0.5 ? 255 : 0;
+            imgData.data[i] = v;
+            imgData.data[i + 1] = v;
+            imgData.data[i + 2] = v;
+            imgData.data[i + 3] = 28;
+          }
+          gCtx.putImageData(imgData, 0, 0);
+        }
+        return ctx.createPattern(grainPatternCanvas, 'repeat');
+      }
+
+      function renderSimulatorToCanvas(ctx, width, height, elapsedSec) {
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, width, height);
+
+        const cam = getCameraTransform(elapsedSec);
+        ctx.save();
+        ctx.translate(width / 2 + cam.tx * 1.8, height / 2 + cam.ty * 1.8);
+        ctx.rotate((cam.rot * Math.PI) / 180);
+        ctx.scale(cam.scale, cam.scale);
+        ctx.translate(-width / 2, -height / 2);
+
+        const accent = getAccentHex();
+        const padX = Math.round(width * 0.052);
+        const topBarH = Math.round(height * 0.145);
+
+        const hasComposerText = els.composerInput.value.trim().length > 0;
+        const isSendPoppedUp = hasComposerText || els.sendButton.classList.contains('send-visible');
+
+        const plusR = Math.round(width * 0.044);
+        const plusCenterX = padX + plusR;
+        const pillLeft = plusCenterX + plusR + 14;
+        const pillRight = width - padX;
+        const pillW = pillRight - pillLeft;
+
+        const sendR = Math.round(width * 0.038);
+        const sendCenterX = pillRight - sendR - 8;
+
+        const compFontSize = Math.round(width * 0.039);
+        const compLineH = Math.round(compFontSize * 1.32);
+        ctx.font = `400 ${compFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+
+        const textWrapMaxW = pillW - 26 - (isSendPoppedUp ? (sendR * 2 + 14) : 12);
+        const composerLines = hasComposerText
+          ? wrapCanvasText(ctx, els.composerInput.value, Math.max(80, textWrapMaxW))
+          : [state.themeColor === 'green' ? 'Text Message' : 'iMessage'];
+
+        const visibleCompLines = composerLines.slice(-5);
+        const pillInnerH = Math.max(sendR * 2 + 12, visibleCompLines.length * compLineH + 18);
+        const bottomBarH = pillInnerH + Math.round(height * 0.046);
+        const compBarTop = height - bottomBarH;
+
+        ctx.fillStyle = '#121214';
+        ctx.fillRect(0, 0, width, topBarH);
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, topBarH);
+        ctx.lineTo(width, topBarH);
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `600 ${Math.round(width * 0.031)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(state.statusTime.trim() || '9:41', padX + 10, 28);
+
+        const islandW = Math.round(width * 0.25);
+        const islandH = 32;
+        ctx.fillStyle = '#000000';
+        roundRectPath(ctx, (width - islandW) / 2, 12, islandW, islandH, 16);
+        ctx.fill();
+
+        const sigX = width - padX - 66;
+        for (let b = 0; b < 4; b++) {
+          const bh = 8 + b * 3.5;
+          ctx.fillStyle = '#ffffff';
+          roundRectPath(ctx, sigX + b * 7, 34 - bh, 4.5, bh, 1.5);
+          ctx.fill();
+        }
+        ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+        ctx.lineWidth = 2;
+        roundRectPath(ctx, width - padX - 32, 20, 30, 15, 4);
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        roundRectPath(ctx, width - padX - 29, 23, 24, 9, 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#0a84ff';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const backX = padX + 8;
+        const backY = Math.round(topBarH * 0.64);
+        ctx.beginPath();
+        ctx.moveTo(backX + 10, backY - 12);
+        ctx.lineTo(backX - 4, backY);
+        ctx.lineTo(backX + 10, backY + 12);
+        ctx.stroke();
+
+        const avatarR = Math.round(width * 0.044);
+        const avatarX = Math.round(width * 0.5);
+        const avatarY = Math.round(topBarH * 0.52);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(avatarX, avatarY, avatarR, 0, Math.PI * 2);
+        ctx.clip();
+
+        if (cachedAvatarImg) {
+          ctx.drawImage(cachedAvatarImg, avatarX - avatarR, avatarY - avatarR, avatarR * 2, avatarR * 2);
+        } else {
+          ctx.fillStyle = '#27272a';
+          ctx.fillRect(avatarX - avatarR, avatarY - avatarR, avatarR * 2, avatarR * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.font = `600 ${Math.round(avatarR * 0.85)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          const initials = (state.contactInitials.trim() || state.contactName.trim().slice(0, 2) || 'ML').toUpperCase();
+          ctx.fillText(initials, avatarX, avatarY + 1);
+        }
+        ctx.restore();
+
+        ctx.fillStyle = '#f4f4f5';
+        ctx.font = `500 ${Math.round(width * 0.031)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(els.previewContactName.textContent || 'Maya Lin', avatarX, avatarY + avatarR + 15);
+
+        if (state.contactSubtitle.trim()) {
+          ctx.fillStyle = '#8e8e93';
+          ctx.font = `400 ${Math.round(width * 0.024)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+          ctx.fillText(state.contactSubtitle.trim(), avatarX, avatarY + avatarR + 33);
+        }
+
+        const camBtnR = Math.round(width * 0.055);
+        const camBtnX = width - padX - camBtnR;
+        const camBtnY = Math.round(topBarH * 0.64);
+
+        ctx.fillStyle = '#242426';
+        ctx.beginPath();
+        ctx.arc(camBtnX, camBtnY, camBtnR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.16)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 3.6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        const boxW = camBtnR * 0.96;
+        const boxH = camBtnR * 0.68;
+        const boxX = camBtnX - boxW * 0.64;
+        const boxY = camBtnY - boxH * 0.5;
+        roundRectPath(ctx, boxX, boxY, boxW, boxH, 7);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(boxX + boxW, camBtnY - boxH * 0.24);
+        ctx.lineTo(boxX + boxW + camBtnR * 0.42, camBtnY - boxH * 0.48);
+        ctx.lineTo(boxX + boxW + camBtnR * 0.42, camBtnY + boxH * 0.48);
+        ctx.lineTo(boxX + boxW, camBtnY + boxH * 0.24);
+        ctx.closePath();
+        ctx.stroke();
+
+        const threadTop = topBarH + 16;
+        const threadBottom = compBarTop - 16;
+        const bubbleRows = Array.from(els.chatMessagesInner.querySelectorAll('.bubble-row'));
+        const fontSize = Math.round(width * 0.041);
+        const lineHeight = Math.round(fontSize * 1.35);
+        const maxBubbleW = Math.round(width * 0.72);
+
+        const items = bubbleRows.map((row) => {
+          const isMe = row.classList.contains('me');
+          const bubble = row.querySelector('.chat-bubble');
+          const text = bubble ? bubble.textContent : '';
+          ctx.font = `400 ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+          const lines = wrapCanvasText(ctx, text, maxBubbleW - 36);
+          const h = lines.length * lineHeight + 22;
+          const longestLine = lines.reduce((m, l) => Math.max(m, ctx.measureText(l).width), 0);
+          const w = Math.min(maxBubbleW, Math.max(68, Math.ceil(longestLine + 36)));
+          return { isMe, lines, h, w };
+        });
+
+        const receiptEl = els.chatMessagesInner.querySelector('.delivery-receipt');
+        const receiptText = receiptEl ? receiptEl.textContent : '';
+        const receiptExtraH = receiptText ? 22 : 0;
+        const typingExtraH = !els.typingIndicator.classList.contains('hidden') ? 56 : 0;
+        const totalStackH = items.reduce((sum, it) => sum + it.h + 12, 0) + receiptExtraH + typingExtraH + 28;
+        let cursorY = Math.max(threadTop, threadBottom - totalStackH);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(0, topBarH + 1, width, Math.max(10, threadBottom - topBarH));
+        ctx.clip();
+
+        if (state.headerLabel.trim()) {
+          ctx.fillStyle = '#71717a';
+          ctx.font = `500 ${Math.round(width * 0.026)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(state.headerLabel.trim(), width / 2, cursorY);
+          cursorY += 28;
+        }
+
+        for (const it of items) {
+          const x = it.isMe ? width - padX - it.w : padX;
+          if (state.overlayMode === 'glow' && it.isMe) {
+            ctx.save();
+            ctx.shadowColor = accent;
+            ctx.shadowBlur = 24 * state.overlayIntensity;
+          }
+          ctx.fillStyle = it.isMe ? accent : '#262629';
+          roundRectPath(ctx, x, cursorY, it.w, it.h, 22);
+          ctx.fill();
+          if (state.overlayMode === 'glow' && it.isMe) {
+            ctx.restore();
+          }
+
+          ctx.font = `400 ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'top';
+
+          it.lines.forEach((line, idx) => {
+            const lx = x + 18;
+            const ly = cursorY + 11 + idx * lineHeight;
+            if (state.overlayMode === 'vhs') {
+              ctx.fillStyle = `rgba(255, 40, 80, ${0.55 * state.overlayIntensity})`;
+              ctx.fillText(line, lx - 1.5, ly);
+              ctx.fillStyle = `rgba(40, 220, 255, ${0.55 * state.overlayIntensity})`;
+              ctx.fillText(line, lx + 1.5, ly);
+            }
+            ctx.fillStyle = it.isMe ? '#ffffff' : '#f2f2f7';
+            ctx.fillText(line, lx, ly);
+          });
+
+          cursorY += it.h + 12;
+        }
+
+        if (receiptText) {
+          ctx.fillStyle = '#8e8e93';
+          ctx.font = `500 ${Math.round(width * 0.025)}px -apple-system, BlinkMacSystemFont, sans-serif`;
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'top';
+          ctx.fillText(receiptText, width - padX - 4, cursorY - 6);
+          cursorY += 18;
+        }
+
+        if (!els.typingIndicator.classList.contains('hidden')) {
+          const dotBubbleW = 84;
+          const dotBubbleH = 44;
+          ctx.fillStyle = '#262629';
+          roundRectPath(ctx, padX, cursorY, dotBubbleW, dotBubbleH, 20);
+          ctx.fill();
+
+          for (let d = 0; d < 3; d++) {
+            const bounce = Math.sin(elapsedSec * 7 + d * 1.1) * 4;
+            ctx.fillStyle = '#a1a1aa';
+            ctx.beginPath();
+            ctx.arc(padX + 22 + d * 20, cursorY + dotBubbleH / 2 + bounce, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+
+        ctx.fillStyle = '#0e0e10';
+        ctx.fillRect(0, compBarTop, width, bottomBarH);
+        ctx.strokeStyle = 'rgba(255,255,255,0.09)';
+        ctx.beginPath();
+        ctx.moveTo(0, compBarTop);
+        ctx.lineTo(width, compBarTop);
+        ctx.stroke();
+
+        const pillTop = compBarTop + 12;
+        const pillBottom = pillTop + pillInnerH;
+
+        const plusCenterY = pillBottom - plusR - 2;
+        ctx.fillStyle = '#242426';
+        ctx.beginPath();
+        ctx.arc(plusCenterX, plusCenterY, plusR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#e4e4e7';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        const plusArm = plusR * 0.42;
+        ctx.beginPath();
+        ctx.moveTo(plusCenterX - plusArm, plusCenterY);
+        ctx.lineTo(plusCenterX + plusArm, plusCenterY);
+        ctx.moveTo(plusCenterX, plusCenterY - plusArm);
+        ctx.lineTo(plusCenterX, plusCenterY + plusArm);
+        ctx.stroke();
+
+        ctx.fillStyle = '#1c1c1e';
+        roundRectPath(ctx, pillLeft, pillTop, pillW, pillInnerH, 26);
+        ctx.fill();
+        ctx.strokeStyle = '#2c2c2e';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.font = `400 ${compFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        ctx.fillStyle = hasComposerText ? '#ffffff' : '#71717a';
+
+        const textStartY = pillTop + (pillInnerH - visibleCompLines.length * compLineH) / 2;
+        visibleCompLines.forEach((line, idx) => {
+          ctx.fillText(line, pillLeft + 18, textStartY + idx * compLineH);
+        });
+
+        if (isSendPoppedUp) {
+          const isPulsing = els.sendButton.classList.contains('send-pulse');
+          const r = isPulsing ? sendR * 0.84 : sendR;
+          const sendCenterY = pillBottom - sendR - 6;
+
+          ctx.fillStyle = accent;
+          ctx.beginPath();
+          ctx.arc(sendCenterX, sendCenterY, r, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 3.2;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.moveTo(sendCenterX, sendCenterY + r * 0.45);
+          ctx.lineTo(sendCenterX, sendCenterY - r * 0.45);
+          ctx.moveTo(sendCenterX - r * 0.4, sendCenterY - r * 0.05);
+          ctx.lineTo(sendCenterX, sendCenterY - r * 0.45);
+          ctx.lineTo(sendCenterX + r * 0.4, sendCenterY - r * 0.05);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        roundRectPath(ctx, width * 0.35, height - 16, width * 0.3, 6, 3);
+        ctx.fill();
+
+        const alpha = state.overlayIntensity;
+        if (state.overlayMode === 'vhs') {
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.045 * alpha})`;
+          for (let y = 0; y < height; y += 6) {
+            ctx.fillRect(0, y, width, 2);
+          }
+
+          const trackY = ((elapsedSec * 130) % (height + 60)) - 30;
+          const grad = ctx.createLinearGradient(0, trackY - 14, 0, trackY + 14);
+          grad.addColorStop(0, 'transparent');
+          grad.addColorStop(0.5, `rgba(140, 220, 255, ${0.14 * alpha})`);
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, trackY - 14, width, 28);
+
+          drawCanvasHudStamp(ctx, padX, topBarH + 14, 'VHS • SP', els.hudTimecode.textContent, '#fb7185');
+        } else if (state.overlayMode === 'film') {
+          const pat = getFilmGrainPattern(ctx);
+          if (pat) {
+            ctx.save();
+            ctx.globalAlpha = 0.65 * alpha;
+            ctx.translate((elapsedSec * 97) % 128, (elapsedSec * 53) % 128);
+            ctx.fillStyle = pat;
+            ctx.fillRect(-128, -128, width + 256, height + 256);
+            ctx.restore();
+          }
+          const vig = ctx.createRadialGradient(width / 2, height / 2, width * 0.25, width / 2, height / 2, height * 0.62);
+          vig.addColorStop(0, 'transparent');
+          vig.addColorStop(1, `rgba(0, 0, 0, ${0.8 * alpha})`);
+          ctx.fillStyle = vig;
+          ctx.fillRect(0, 0, width, height);
+        } else if (state.overlayMode === 'crt') {
+          ctx.fillStyle = `rgba(0, 0, 0, ${0.38 * alpha})`;
+          for (let y = 0; y < height; y += 4) {
+            ctx.fillRect(0, y, width, 2);
+          }
+          const vig = ctx.createRadialGradient(width / 2, height / 2, width * 0.3, width / 2, height / 2, height * 0.65);
+          vig.addColorStop(0, 'transparent');
+          vig.addColorStop(1, `rgba(0, 0, 0, ${0.75 * alpha})`);
+          ctx.fillStyle = vig;
+          ctx.fillRect(0, 0, width, height);
+        } else if (state.overlayMode === 'cctv') {
+          ctx.fillStyle = `rgba(16, 185, 129, ${0.14 * alpha})`;
+          ctx.fillRect(0, 0, width, height);
+          ctx.fillStyle = `rgba(0, 0, 0, ${0.3 * alpha})`;
+          for (let y = 0; y < height; y += 5) {
+            ctx.fillRect(0, y, width, 2);
+          }
+          const vig = ctx.createRadialGradient(width / 2, height / 2, width * 0.22, width / 2, height / 2, height * 0.6);
+          vig.addColorStop(0, 'transparent');
+          vig.addColorStop(1, `rgba(0, 15, 8, ${0.84 * alpha})`);
+          ctx.fillStyle = vig;
+          ctx.fillRect(0, 0, width, height);
+
+          drawCanvasHudStamp(ctx, padX, topBarH + 14, 'CAM 01 • IR', els.hudTimecode.textContent, '#10b981');
+        } else if (state.overlayMode === 'glow') {
+          const glow = ctx.createRadialGradient(width / 2, height * 0.38, 20, width / 2, height * 0.38, width * 0.7);
+          glow.addColorStop(0, `rgba(56, 189, 248, ${0.16 * alpha})`);
+          glow.addColorStop(1, 'transparent');
+          ctx.fillStyle = glow;
+          ctx.fillRect(0, 0, width, height);
+        }
+
+        ctx.restore();
+      }
+
+      function drawCanvasHudStamp(ctx, x, y, label, timecode, dotColor) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
+        roundRectPath(ctx, x, y, 188, 30, 8);
+        ctx.fill();
+
+        ctx.fillStyle = dotColor;
+        ctx.beginPath();
+        ctx.arc(x + 16, y + 15, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#f4f4f5';
+        ctx.font = '600 13px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${label} ${timecode}`, x + 28, y + 16);
+      }
+
+      function roundRectPath(ctx, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.arcTo(x + w, y, x + w, y + h, radius);
+        ctx.arcTo(x + w, y + h, x, y + h, radius);
+        ctx.arcTo(x, y + h, x, y, radius);
+        ctx.arcTo(x, y, x + w, y, radius);
+        ctx.closePath();
+      }
+
+      function wrapCanvasText(ctx, text, maxWidth) {
+        const paragraphs = String(text).split('\n');
+        const allLines = [];
+
+        paragraphs.forEach((para) => {
+          const words = para.split(/\s+/).filter(Boolean);
+          if (!words.length) {
+            allLines.push('');
+            return;
+          }
+          let current = words[0];
+          for (let i = 1; i < words.length; i++) {
+            const test = current + ' ' + words[i];
+            if (ctx.measureText(test).width <= maxWidth) {
+              current = test;
+            } else {
+              allLines.push(current);
+              current = words[i];
+            }
+          }
+          allLines.push(current);
+        });
+
+        return allLines.length ? allLines : [''];
+      }
+
+      function pickSupportedMimeType() {
+        const candidates = [
+          'video/mp4;codecs=avc1',
+          'video/mp4',
+          'video/webm;codecs=vp9,opus',
+          'video/webm;codecs=vp8,opus',
+          'video/webm'
+        ];
+        if (typeof MediaRecorder === 'undefined') return '';
+        for (const mime of candidates) {
+          try {
+            if (MediaRecorder.isTypeSupported(mime)) return mime;
+          } catch (err) {
+            // Continue checking
+          }
+        }
+        return '';
+      }
+
+      async function handleDownloadVideo() {
+        if (state.isExporting) return;
+
+        if (typeof MediaRecorder === 'undefined') {
+          showToast('Video recording is not supported in this browser.');
+          return;
+        }
+
+        const mimeType = pickSupportedMimeType();
+        if (!mimeType) {
+          showToast('No supported video format found in this browser.');
+          return;
+        }
+
+        state.cancelToken += 1;
+        const token = state.cancelToken;
+        state.isExporting = true;
+        state.isPlaying = true;
+        els.downloadVideoBtn.disabled = true;
+        els.previewAnimBtn.disabled = true;
+        els.downloadBtnLabel.textContent = 'Recording 60fps...';
+        updateStatusBanner(true, 'Recording 60fps video (ETA calculating...)...', 2);
+
+        // Export at full 1080x1920 portrait resolution.
+        const width = 1080;
+        const height = 1920;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // Manual frame capture keeps rendering on a fixed 60fps clock when supported.
+        let videoStream = canvas.captureStream(0);
+        let videoTrack = videoStream.getVideoTracks()[0];
+        const manualFrameCapture = !!(videoTrack && typeof videoTrack.requestFrame === 'function');
+        if (!manualFrameCapture) {
+          videoStream.getTracks().forEach((track) => track.stop());
+          videoStream = canvas.captureStream(60);
+          videoTrack = videoStream.getVideoTracks()[0];
+        }
+        const combinedTracks = [...videoStream.getVideoTracks()];
+
+        try {
+          const destNode = ensureWebAudioGraph();
+          if (destNode && destNode.stream) {
+            destNode.stream.getAudioTracks().forEach((track) => combinedTracks.push(track));
+          }
+        } catch (err) {
+          // Fallback to video-only stream
+        }
+
+        let combinedStream = new MediaStream(combinedTracks);
+        let recorder;
+        const chunks = [];
+
+        try {
+          recorder = new MediaRecorder(combinedStream, {
+            mimeType,
+            videoBitsPerSecond: 10000000
+          });
+        } catch (err) {
+          try {
+            combinedStream = new MediaStream(videoStream.getVideoTracks());
+            recorder = new MediaRecorder(combinedStream, { mimeType });
+          } catch (fallbackErr) {
+            state.isExporting = false;
+            state.isPlaying = false;
+            els.downloadVideoBtn.disabled = false;
+            els.previewAnimBtn.disabled = false;
+            els.downloadBtnLabel.textContent = 'Download Video';
+            updateStatusBanner(false);
+            showToast('Could not start video recorder.');
+            return;
+          }
+        }
+
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            chunks.push(e.data);
+          }
+        };
+
+        let frameTimer = null;
+        let startTime = 0;
+        const drawFrame = () => {
+          if (!state.isExporting) return;
+          const elapsedSec = Math.max(0, (performance.now() - startTime) / 1000);
+          applyCameraToScreen(elapsedSec);
+          renderSimulatorToCanvas(ctx, width, height, elapsedSec);
+          if (manualFrameCapture && videoTrack && typeof videoTrack.requestFrame === 'function') {
+            videoTrack.requestFrame();
+          }
+        };
+
+        // Start the export clock only after audio playback has actually started.
+        await startSongPlayback();
+        recorder.start(100);
+        startTime = performance.now();
+        drawFrame();
+        frameTimer = window.setInterval(drawFrame, 1000 / 60);
+
+        try {
+          await runConversationSequence(token, (pct) => {
+            const elapsedSec = (performance.now() - startTime) / 1000;
+            const etaSec = pct > 3 ? Math.max(0, Math.round((elapsedSec / pct) * (100 - pct))) : null;
+            const etaStr = etaSec !== null ? ` • ETA ~${etaSec}s` : '';
+            updateStatusBanner(true, `Recording 60fps video${etaStr}`, pct);
+          });
+        } finally {
+          if (frameTimer) clearInterval(frameTimer);
+          renderSimulatorToCanvas(ctx, width, height, (performance.now() - startTime) / 1000);
+          if (manualFrameCapture && videoTrack && typeof videoTrack.requestFrame === 'function') {
+            videoTrack.requestFrame();
+          }
+          stopSongPlayback();
+        }
+
+        const blob = await new Promise((resolve) => {
+          recorder.onstop = () => {
+            resolve(new Blob(chunks, { type: mimeType }));
+          };
+          recorder.stop();
+        });
+
+        try {
+          combinedStream.getTracks().forEach((t) => t.stop());
+          videoStream.getTracks().forEach((t) => t.stop());
+        } catch (err) {
+          // Ignore track stop errors
+        }
+        teardownWebAudioGraph();
+        canvas.width = 0;
+        canvas.height = 0;
+
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+        const safeName = (state.contactName || 'imessage').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${safeName}-chat.${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+        state.isExporting = false;
+        state.isPlaying = false;
+        els.downloadVideoBtn.disabled = false;
+        els.previewAnimBtn.disabled = false;
+        els.downloadBtnLabel.textContent = 'Download Video';
+        els.previewBtnLabel.textContent = 'Play Preview';
+        updateStatusBanner(true, `Exported ${safeName}-chat.${ext}`, 100);
+        showToast(`Downloaded ${safeName}-chat.${ext}!`);
+
+        setTimeout(() => {
+          if (!state.isExporting) updateStatusBanner(false);
+        }, 3200);
+      }
+
+      async function handleTogglePreview() {
+        if (state.isExporting) return;
+
+        state.cancelToken += 1;
+        const token = state.cancelToken;
+        state.isPlaying = true;
+        els.previewBtnLabel.textContent = 'Restart Preview';
+
+        await startSongPlayback();
+        const finished = await runConversationSequence(token);
+
+        if (state.cancelToken === token) {
+          state.isPlaying = false;
+          els.previewBtnLabel.textContent = 'Play Preview';
+          if (finished) stopSongPlayback();
+        }
+      }
+
+      // Event Bindings
+      els.undoBtn.addEventListener('click', performUndo);
+      els.redoBtn.addEventListener('click', performRedo);
+
+      els.contactNameInput.addEventListener('input', (e) => {
+        pushUndoCheckpoint();
+        state.contactName = e.target.value;
+        if (!state.contactInitials.trim()) {
+          els.contactInitialsInput.value = state.contactName.trim().slice(0, 2).toUpperCase();
+          state.contactInitials = els.contactInitialsInput.value;
+        }
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.contactSubtitleInput.addEventListener('input', (e) => {
+        pushUndoCheckpoint();
+        state.contactSubtitle = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.contactInitialsInput.addEventListener('input', (e) => {
+        pushUndoCheckpoint();
+        state.contactInitials = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.statusTimeInput.addEventListener('input', (e) => {
+        pushUndoCheckpoint();
+        state.statusTime = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.headerTimestampInput.addEventListener('input', (e) => {
+        pushUndoCheckpoint();
+        state.headerLabel = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.avatarPhotoInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        pushUndoCheckpoint();
+        const reader = new FileReader();
+        reader.onload = () => {
+          const img = new Image();
+          img.onload = () => {
+            const c = document.createElement('canvas');
+            c.width = 128;
+            c.height = 128;
+            const cCtx = c.getContext('2d');
+            const minSide = Math.min(img.width, img.height);
+            const sx = (img.width - minSide) / 2;
+            const sy = (img.height - minSide) / 2;
+            cCtx.drawImage(img, sx, sy, minSide, minSide, 0, 0, 128, 128);
+            state.avatarDataUrl = c.toDataURL('image/jpeg', 0.85);
+            updateAvatarImageCache();
+            els.clearAvatarPhotoBtn.style.display = 'inline-flex';
+            saveState();
+            applyThemeAndHeader();
+            showToast('Contact photo updated!');
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      els.clearAvatarPhotoBtn.addEventListener('click', () => {
+        pushUndoCheckpoint();
+        state.avatarDataUrl = '';
+        cachedAvatarImg = null;
+        els.avatarPhotoInput.value = '';
+        els.clearAvatarPhotoBtn.style.display = 'none';
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.overlaySelect.addEventListener('change', (e) => {
+        pushUndoCheckpoint();
+        state.overlayMode = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+        drawWaveform();
+      });
+
+      els.overlayIntensitySlider.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10);
+        state.overlayIntensity = (Number.isNaN(pct) ? 75 : pct) / 100;
+        els.overlayIntensityValue.textContent = `${Math.round(state.overlayIntensity * 100)}%`;
+        saveState();
+        applyThemeAndHeader();
+      });
+
+      els.cameraZoomSlider.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10) || 100;
+        state.cameraZoom = pct / 100;
+        els.cameraZoomValue.textContent = `${state.cameraZoom.toFixed(2)}x`;
+        saveState();
+        applyCameraToScreen(state.timelineElapsedSec);
+      });
+
+      els.cameraDriftSlider.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10) || 0;
+        state.cameraDrift = pct / 100;
+        els.cameraDriftValue.textContent = `${pct}%`;
+        saveState();
+        applyCameraToScreen(state.timelineElapsedSec);
+      });
+
+      els.themeColorSelect.addEventListener('change', (e) => {
+        pushUndoCheckpoint();
+        state.themeColor = e.target.value;
+        saveState();
+        applyThemeAndHeader();
+        renderEditorList();
+        drawWaveform();
+      });
+
+      els.typingSpeedSelect.addEventListener('change', (e) => {
+        pushUndoCheckpoint();
+        state.typingSpeed = e.target.value;
+        saveState();
+      });
+
+      els.lengthPauseToggle.addEventListener('change', (e) => {
+        pushUndoCheckpoint();
+        state.lengthBasedPause = e.target.checked;
+        saveState();
+      });
+
+      els.receiptModeSelect.addEventListener('change', (e) => {
+        pushUndoCheckpoint();
+        state.receiptMode = e.target.value;
+        saveState();
+        updateDeliveryReceipt();
+      });
+
+      els.receiptDelayInput.addEventListener('change', (e) => {
+        pushUndoCheckpoint();
+        const v = parseFloat(e.target.value);
+        state.receiptDelay = Number.isNaN(v) ? 0.5 : Math.max(0, Math.min(10, v));
+        e.target.value = state.receiptDelay.toFixed(1);
+        saveState();
+      });
+
+      els.readDelayInput.addEventListener('change', (e) => {
+        pushUndoCheckpoint();
+        const v = parseFloat(e.target.value);
+        state.readDelay = Number.isNaN(v) ? 1.1 : Math.max(0, Math.min(15, v));
+        e.target.value = state.readDelay.toFixed(1);
+        saveState();
+      });
+
+      els.sfxToggleInput.addEventListener('change', (e) => {
+        pushUndoCheckpoint();
+        state.sfxEnabled = e.target.checked;
+        if (sfxBusGainNode) sfxBusGainNode.gain.value = state.sfxEnabled ? 1 : 0;
+        saveState();
+      });
+
+      els.typingSfxSlider.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10) || 0;
+        state.typingSfxVolume = pct / 100;
+        els.typingSfxValue.textContent = `${pct}%`;
+        saveState();
+      });
+
+      els.notifySfxSlider.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10) || 0;
+        state.notifySfxVolume = pct / 100;
+        els.notifySfxValue.textContent = `${pct}%`;
+        saveState();
+      });
+
+      els.presetMidnightBtn.addEventListener('click', () => {
+        pushUndoCheckpoint();
+        state.messages = PRESETS.midnight.map((m) => ({ ...m, id: uid() }));
+        saveState();
+        renderEditorList();
+        handleTogglePreview();
+      });
+
+      els.presetLongWrapBtn.addEventListener('click', () => {
+        pushUndoCheckpoint();
+        state.messages = PRESETS.longWrap.map((m) => ({ ...m, id: uid() }));
+        saveState();
+        renderEditorList();
+        handleTogglePreview();
+      });
+
+      els.resetDefaultBtn.addEventListener('click', () => {
+        pushUndoCheckpoint();
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch (err) {}
+        state.contactName = 'Maya Lin';
+        state.contactSubtitle = 'iMessage';
+        state.contactInitials = 'ML';
+        state.avatarDataUrl = '';
+        cachedAvatarImg = null;
+        state.statusTime = '9:41';
+        state.headerLabel = 'iMessage • Today 9:41 PM';
+        state.overlayMode = 'none';
+        state.overlayIntensity = 0.75;
+        state.cameraZoom = 1.0;
+        state.cameraDrift = 0.2;
+        state.themeColor = 'blue';
+        state.typingSpeed = 'natural';
+        state.lengthBasedPause = true;
+        state.receiptMode = 'Delivered';
+        state.receiptDelay = 0.5;
+        state.readDelay = 1.1;
+        state.fadeInSec = 0.4;
+        state.fadeOutSec = 0.8;
+        state.messages = PRESETS.midnight.map((m) => ({ ...m, id: uid() }));
+        syncControlsFromState();
+        applyThemeAndHeader();
+        renderEditorList();
+        drawWaveform();
+        handleTogglePreview();
+        showToast('Reset to default template.');
+      });
+
+      els.exportJsonBtn.addEventListener('click', () => {
+        const payload = snapshotProject();
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${(state.contactName || 'imessage').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-project.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 3000);
+        showToast('Full project saved as JSON!');
+      });
+
+      els.importJsonInput.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result));
+            if (Array.isArray(parsed.messages) && parsed.messages.length > 0) {
+              pushUndoCheckpoint();
+              applyProjectSnapshot(parsed);
+              saveState();
+              updateAvatarImageCache();
+              syncControlsFromState();
+              applyThemeAndHeader();
+              renderEditorList();
+              drawWaveform();
+              handleTogglePreview();
+              showToast('Full project loaded!');
+            } else {
+              showToast('Invalid project JSON format.');
+            }
+          } catch (err) {
+            showToast('Could not parse JSON file.');
+          }
+          els.importJsonInput.value = '';
+        };
+        reader.readAsText(file);
+      });
+
+      els.audioFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        if (state.audioUrl) {
+          URL.revokeObjectURL(state.audioUrl);
+        }
+
+        state.audioUrl = URL.createObjectURL(file);
+        state.audioFileName = file.name;
+        state.songOffset = 0;
+        els.songOffsetSlider.value = '0';
+        els.songOffsetValue.textContent = '0.0s';
+
+        els.songAudioEl.src = state.audioUrl;
+        els.audioFileName.textContent = file.name;
+        els.audioPreviewToggleBtn.disabled = false;
+        els.clearAudioBtn.disabled = false;
+
+        const arrayBuffer = await file.arrayBuffer();
+        await extractAudioWaveform(arrayBuffer);
+        showToast('Song loaded & analyzed for beats!');
+      });
+
+      els.audioPreviewToggleBtn.addEventListener('click', () => {
+        if (!state.audioUrl) return;
+        if (els.songAudioEl.paused) {
+          startSongPlayback();
+        } else {
+          stopSongPlayback();
+        }
+      });
+
+      els.clearAudioBtn.addEventListener('click', () => {
+        stopSongPlayback();
+        if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+        state.audioUrl = null;
+        state.audioFileName = '';
+        state.audioDuration = 0;
+        state.waveformPeaks = [];
+        state.detectedBeats = [];
+        state.songOffset = 0;
+        els.snapBeatsBtn.disabled = true;
+        els.songAudioEl.removeAttribute('src');
+        els.audioFileInput.value = '';
+        els.audioFileName.textContent = 'No song uploaded (optional)';
+        els.audioDurationLabel.textContent = 'MP3, WAV, M4A, OGG • Auto beat detection & audio/video mix';
+        els.audioPreviewToggleBtn.disabled = true;
+        els.clearAudioBtn.disabled = true;
+        els.songOffsetSlider.disabled = true;
+        els.songOffsetSlider.value = '0';
+        els.songOffsetValue.textContent = '0.0s';
+        drawWaveform();
+      });
+
+      els.songOffsetSlider.addEventListener('input', (e) => {
+        state.songOffset = parseFloat(e.target.value) || 0;
+        els.songOffsetValue.textContent = `${state.songOffset.toFixed(1)}s`;
+        saveState();
+        drawWaveform();
+      });
+
+      els.waveformCanvas.addEventListener('click', (e) => {
+        if (!state.audioDuration) return;
+        const rect = els.waveformCanvas.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        state.songOffset = Number((ratio * state.audioDuration).toFixed(1));
+        els.songOffsetSlider.value = String(state.songOffset);
+        els.songOffsetValue.textContent = `${state.songOffset.toFixed(1)}s`;
+        saveState();
+        drawWaveform();
+      });
+
+      els.songVolumeSlider.addEventListener('input', (e) => {
+        const pct = parseInt(e.target.value, 10) || 0;
+        state.songVolume = pct / 100;
+        els.songVolumeValue.textContent = `${pct}%`;
+        els.songAudioEl.volume = state.songVolume;
+        if (audioGainNode) audioGainNode.gain.value = state.songVolume;
+        saveState();
+      });
+
+      els.fadeInSlider.addEventListener('input', (e) => {
+        state.fadeInSec = parseFloat(e.target.value) || 0;
+        els.fadeInValue.textContent = `${state.fadeInSec.toFixed(1)}s`;
+        saveState();
+      });
+
+      els.fadeOutSlider.addEventListener('input', (e) => {
+        state.fadeOutSec = parseFloat(e.target.value) || 0;
+        els.fadeOutValue.textContent = `${state.fadeOutSec.toFixed(1)}s`;
+        saveState();
+      });
+
+      els.snapBeatsBtn.addEventListener('click', snapMessagesToBeats);
+
+      els.tapSyncBtn.addEventListener('click', () => {
+        if (!state.isTapSyncing) {
+          toggleTapSyncMode();
+        } else {
+          recordBeatTap();
+        }
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (state.isTapSyncing && e.code === 'Space') {
+          e.preventDefault();
+          recordBeatTap();
+          return;
+        }
+        const tag = (e.target && e.target.tagName || '').toLowerCase();
+        const isTypingField = tag === 'input' || tag === 'textarea' || tag === 'select';
+        if ((e.metaKey || e.ctrlKey) && !isTypingField) {
+          if (e.key.toLowerCase() === 'z' && !e.shiftKey) {
+            e.preventDefault();
+            performUndo();
+          } else if ((e.key.toLowerCase() === 'z' && e.shiftKey) || e.key.toLowerCase() === 'y') {
+            e.preventDefault();
+            performRedo();
+          }
+        }
+      });
+
+      els.openGuideBtn.addEventListener('click', () => {
+        els.guideModal.classList.remove('hidden');
+      });
+      els.closeGuideBtn.addEventListener('click', () => {
+        els.guideModal.classList.add('hidden');
+      });
+      els.gotItGuideBtn.addEventListener('click', () => {
+        els.guideModal.classList.add('hidden');
+      });
+      els.guideModal.addEventListener('click', (e) => {
+        if (e.target === els.guideModal) {
+          els.guideModal.classList.add('hidden');
+        }
+      });
+
+      els.addPauseRowBtn.addEventListener('click', () => {
+        pushUndoCheckpoint();
+        state.messages.push({
+          id: uid(),
+          type: 'pause',
+          sender: 'them',
+          text: 'Beat / dramatic pause',
+          delay: 0.8,
+          speedMult: 1.0,
+          hesitate: false,
+          hesitateSec: 0.45
+        });
+        saveState();
+        renderEditorList();
+      });
+
+      els.addMessageRowBtn.addEventListener('click', () => {
+        pushUndoCheckpoint();
+        const lastSender = state.messages.length ? state.messages[state.messages.length - 1].sender : 'them';
+        state.messages.push({
+          id: uid(),
+          type: 'message',
+          sender: lastSender === 'me' ? 'them' : 'me',
+          text: '',
+          delay: 0.7,
+          speedMult: 1.0,
+          hesitate: false,
+          hesitateSec: 0.45
+        });
+        saveState();
+        renderEditorList();
+      });
+
+      els.composerInput.addEventListener('input', () => {
+        autoResizeComposer(false);
+      });
+
+      function sendManualComposerMessage() {
+        const text = els.composerInput.value.trim();
+        if (!text) return;
+
+        pushUndoCheckpoint();
+        els.sendButton.classList.add('send-pulse');
+        playSynthesizedSfx('send');
+        setTimeout(() => els.sendButton.classList.remove('send-pulse'), 160);
+
+        state.messages.push({
+          id: uid(),
+          type: 'message',
+          sender: 'me',
+          text,
+          delay: 0.7,
+          speedMult: 1.0,
+          hesitate: false,
+          hesitateSec: 0.45
+        });
+        saveState();
+        renderEditorList();
+        appendBubble('me', text, true);
+        updateDeliveryReceipt();
+        els.composerInput.value = '';
+        autoResizeComposer(false);
+      }
+
+      els.sendButton.addEventListener('click', sendManualComposerMessage);
+      els.composerInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendManualComposerMessage();
+        }
+      });
+
+      els.facetimeVideoBtn.addEventListener('click', () => {
+        showToast(`Starting FaceTime video with ${state.contactName || 'Contact'}...`);
+      });
+
+      els.replayHeaderBtn.addEventListener('click', handleTogglePreview);
+      els.previewAnimBtn.addEventListener('click', handleTogglePreview);
+      els.downloadVideoBtn.addEventListener('click', handleDownloadVideo);
+
+      loadState();
+      updateUndoRedoButtons();
+      updateAvatarImageCache();
+      syncControlsFromState();
+      applyThemeAndHeader();
+      renderEditorList();
+      drawWaveform();
+      handleTogglePreview();
+    });
+  </script>
+</body>
+</html>
